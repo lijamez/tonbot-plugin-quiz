@@ -1,10 +1,12 @@
 package net.tonbot.plugin.quiz.model
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import spock.lang.Specification
 
-class QuizMetadataTest extends Specification {
+class TriviaMetadataTest extends Specification {
 
 	ObjectMapper objMapper;
 
@@ -17,21 +19,21 @@ class QuizMetadataTest extends Specification {
 		given: 
 		String serialized = '''
         {
-			"name" : "Test Quiz Pack",
+			"name" : "Test Trivia Pack",
             "version" : "0.1",
 			"description" : "For Unit Testing"
         }
 		'''
 		
 		and:
-		QuizMetadata expectedMetadata = QuizMetadata.builder()
-			.name("Test Quiz Pack")
+		TriviaMetadata expectedMetadata = TriviaMetadata.builder()
+			.name("Test Trivia Pack")
 			.version("0.1")
 			.description("For Unit Testing")
 			.build()
 		
 		when:
-		QuizMetadata metadata = objMapper.readValue(serialized, QuizMetadata.class)
+		TriviaMetadata metadata = objMapper.readValue(serialized, TriviaMetadata.class)
 		
 		then:
 		metadata == expectedMetadata
@@ -48,7 +50,7 @@ class QuizMetadataTest extends Specification {
 		'''
 		
 		when:
-		QuizMetadata metadata = objMapper.readValue(serialized, QuizMetadata.class)
+		TriviaMetadata metadata = objMapper.readValue(serialized, TriviaMetadata.class)
 		
 		then:
 		thrown JsonMappingException
@@ -58,14 +60,14 @@ class QuizMetadataTest extends Specification {
 		given: 
 		String serialized = '''
         {
-			"name" : "Test Quiz Pack",
+			"name" : "Test Trivia Pack",
             "version" : "",
 			"description" : "For Unit Testing"
         }
 		'''
 		
 		when:
-		QuizMetadata metadata = objMapper.readValue(serialized, QuizMetadata.class)
+		TriviaMetadata metadata = objMapper.readValue(serialized, TriviaMetadata.class)
 		
 		then:
 		thrown JsonMappingException
@@ -75,14 +77,14 @@ class QuizMetadataTest extends Specification {
 		given:
 		String serialized = '''
         {
-			"name" : "Test Quiz Pack",
+			"name" : "Test Trivia Pack",
             "version" : "0.1",
 			"description" : ""
         }
 		'''
 		
 		when:
-		QuizMetadata metadata = objMapper.readValue(serialized, QuizMetadata.class)
+		TriviaMetadata metadata = objMapper.readValue(serialized, TriviaMetadata.class)
 		
 		then:
 		thrown JsonMappingException

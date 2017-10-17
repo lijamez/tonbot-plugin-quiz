@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class QuizMetadata {
+public class TriviaMetadata {
 
 	private final String name;
 	private final String version;
@@ -18,7 +18,7 @@ public class QuizMetadata {
 
 	@Builder
 	@JsonCreator
-	public QuizMetadata(
+	public TriviaMetadata(
 			@JsonProperty("name") String name,
 			@JsonProperty("version") String version,
 			@JsonProperty("description") String description) {

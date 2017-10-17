@@ -15,4 +15,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'tonbot-plugin-quiz'
+rootProject.name = 'tonbot-plugin-trivia'

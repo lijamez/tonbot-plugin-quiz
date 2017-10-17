@@ -1,4 +1,4 @@
-# Tonbot Quiz Plugin
+# Tonbot Trivia Plugin
 
 ```
 Plugin is in development.
@@ -14,22 +14,22 @@ Questions which require users to enter the answer. Great for "fill in the blank"
 
 #### Multiple Choice
 Answers are randomized. 
-Quiz packs can include several different correct and incorrect choices. Tonbot can randomly pick from these choices to show to players. 
+Trivia packs can include several different correct and incorrect choices. Tonbot can randomly pick from these choices to show to players. 
 
 #### Music Identification
 Plays a song, starting at any point. Players are asked to identify the song name, artist, composer, etc.
 
-### Custom Quiz Packs
-Easily create your own quizzes.
+### Custom Trivia Packs
+Easily create your own trivia questions.
 
-## Quiz Pack Specification
+## Trivia Pack Specification
 
-A quiz pack is a folder which contains the following files:
-* ``quiz.json`` Includes the quiz pack's metadata, such as quiz pack name, version, description.
+A trivia pack is a folder which contains the following files:
+* ``trivia.json`` Includes the trivia pack's metadata, such as trivia pack name, version, description.
 * ``questions.json`` Contains the questions.
 * ``music`` A folder which contains music for the music identification questions. Tracks used for music should have correct ID3 tags.
 
-### quiz.json
+### trivia.json
 
 Sample:
 ```json

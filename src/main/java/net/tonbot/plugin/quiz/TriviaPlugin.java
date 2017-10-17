@@ -8,9 +8,9 @@ import net.tonbot.common.Activity;
 import net.tonbot.common.TonbotPlugin;
 import net.tonbot.common.TonbotPluginArgs;
 
-public class QuizPlugin extends TonbotPlugin {
+public class TriviaPlugin extends TonbotPlugin {
 
-	public QuizPlugin(TonbotPluginArgs pluginArgs) {
+	public TriviaPlugin(TonbotPluginArgs pluginArgs) {
 		super(pluginArgs);
 	}
 
