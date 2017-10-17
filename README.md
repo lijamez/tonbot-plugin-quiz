@@ -1,4 +1,4 @@
-# Tonbot Trivia Plugin
+# Tonbot Trivia Plugin [![Build Status](https://travis-ci.org/lijamez/tonbot-plugin-trivia.svg?branch=master)](https://travis-ci.org/lijamez/tonbot-plugin-trivia)
 
 ```
 Plugin is in development.
