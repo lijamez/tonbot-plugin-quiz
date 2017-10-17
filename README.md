@@ -68,8 +68,8 @@ Must contain the following fields:
 Example: 
 ```json
 {
-  "type":"short_answer",
-  "question":" "What was the former name of Thomas Bergersen's 2011 album, Illusions?",
+  "type" : "short_answer",
+  "question" : " What was the former name of Thomas Bergersen's 2011 album, Illusions?",
   "answers" : ["Nemesis II"]
 }
 ```
@@ -88,8 +88,8 @@ A Choice is structured as follows:
 Sample:
 ```json
 {
-  "type":"multiple_choice",
-  "question": "What was Two Steps From Hell's first public album?"
+  "type" : "multiple_choice",
+  "question": "What was Two Steps From Hell's first public album?",
   "choices" : [
     {
       "value" : "Invincible",
