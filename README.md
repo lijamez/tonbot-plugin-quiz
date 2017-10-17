@@ -123,7 +123,7 @@ Sample:
 
 Must contain the following fields:
 * ``type`` : String. Must be ``music_identification``
-* ``track`` : String. A path to the track. The path is relative to the ``music`` folder.
+* ``track_path`` : String. A path to the track. The path is relative to the ``music`` folder.
 * ``ask_for`` : List of strings. Must be one of: ``title``, ``album_name``, ``artist``, ``composer``,  ``release_year``. Tonbot will ask for one of these.
 
 Example: 
