@@ -1,7 +1,5 @@
 package net.tonbot.plugin.quiz.model
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import spock.lang.Specification

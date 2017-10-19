@@ -1,7 +1,5 @@
 package net.tonbot.plugin.quiz.model
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import spock.lang.Specification
@@ -19,7 +17,8 @@ class MultipleChoiceQuestionTest extends Specification {
 		given: 
 		String questionStr = '''
         {
-			"type":"multiple_choice",
+			"type" : "multiple_choice",
+			"points" : 5,
             "question" : "Sample Question?",
 			"choices" : [
 				{
@@ -36,6 +35,7 @@ class MultipleChoiceQuestionTest extends Specification {
 		
 		and:
 		MultipleChoiceQuestion expectedQuestion = MultipleChoiceQuestion.builder()
+			.points(5)
 			.question("Sample Question?")
 			.choices([
 				Choice.builder()
@@ -61,7 +61,8 @@ class MultipleChoiceQuestionTest extends Specification {
 		given:
 		String questionStr = '''
         {
-			"type":"multiple_choice",
+			"type" : "multiple_choice",
+			"points" : 5,
             "question" : "Sample Question?",
 			"choices" : [
 				{
@@ -83,7 +84,8 @@ class MultipleChoiceQuestionTest extends Specification {
 		given:
 		String questionStr = '''
         {
-			"type":"multiple_choice",
+			"type" : "multiple_choice",
+			"points" : 5,
             "question" : "Sample Question?",
 			"choices" : [
 				{
@@ -105,7 +107,8 @@ class MultipleChoiceQuestionTest extends Specification {
 		given:
 		String questionStr = '''
         {
-			"type":"multiple_choice",
+			"type" : "multiple_choice",
+			"points" : 5,
             "question" : "Sample Question?",
 			"choices" : []
         }
@@ -122,7 +125,8 @@ class MultipleChoiceQuestionTest extends Specification {
 		given:
 		String questionStr = '''
         {
-			"type":"multiple_choice",
+			"type" : "multiple_choice",
+			"points" : 5,
             "question" : "",
 			"choices" : [
 				{

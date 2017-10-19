@@ -1,7 +1,5 @@
 package net.tonbot.plugin.quiz.model
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import spock.lang.Specification
@@ -19,7 +17,8 @@ class MusicIdentificationQuestionTest extends Specification {
 		given: 
 		String questionStr = '''
         {
-			"type":"music_identification",
+			"type" : "music_identification",
+			"points" : 5,
             "track_path" : "test.mp3",
 			"ask_for" : ["ARTIST_NAME", "TITLE"]
         }
@@ -27,6 +26,7 @@ class MusicIdentificationQuestionTest extends Specification {
 		
 		and:
 		MusicIdentificationQuestion expectedQuestion = MusicIdentificationQuestion.builder()
+			.points(5)
 			.trackPath("test.mp3")
 			.askFor([
 				TrackProperty.ARTIST_NAME,
@@ -45,7 +45,8 @@ class MusicIdentificationQuestionTest extends Specification {
 		given:
 		String questionStr = '''
         {
-			"type":"music_identification",
+			"type" : "music_identification",
+			"points" : 5,
             "track_path" : "",
 			"ask_for" : ["ARTIST_NAME", "TITLE"]
         }
@@ -62,7 +63,8 @@ class MusicIdentificationQuestionTest extends Specification {
 		given:
 		String questionStr = '''
         {
-			"type":"music_identification",
+			"type" : "music_identification",
+			"points" : 5,
             "track_path" : "",
 			"ask_for" : []
         }

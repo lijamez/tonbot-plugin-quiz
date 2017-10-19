@@ -1,7 +1,5 @@
 package net.tonbot.plugin.quiz.model
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import spock.lang.Specification
@@ -19,7 +17,8 @@ class ShortAnswerQuestionTest extends Specification {
 		given: 
 		String questionStr = '''
         {
-			"type":"short_answer",
+			"type" : "short_answer",
+			"points" : 5,
             "question" : "Test Question?",
 			"answers" : ["A", "B", "C"]
         }
@@ -27,6 +26,7 @@ class ShortAnswerQuestionTest extends Specification {
 		
 		and:
 		ShortAnswerQuestion expectedQuestion = ShortAnswerQuestion.builder()
+			.points(5)
 			.question("Test Question?")
 			.answers(["A", "B", "C"])
 			.build()
@@ -43,6 +43,7 @@ class ShortAnswerQuestionTest extends Specification {
 		String questionStr = '''
         {
 			"type":"short_answer",
+			"points" : 5,
             "question" : "",
 			"answers" : ["A", "B", "C"]
         }
@@ -60,6 +61,7 @@ class ShortAnswerQuestionTest extends Specification {
 		String questionStr = '''
         {
 			"type":"short_answer",
+			"points" : 5,
             "question" : "Test Question?",
 			"answers" : []
         }

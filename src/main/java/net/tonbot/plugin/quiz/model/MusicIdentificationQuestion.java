@@ -15,7 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 public class MusicIdentificationQuestion extends Question {
 
 	private final String trackPath;
@@ -24,8 +24,11 @@ public class MusicIdentificationQuestion extends Question {
 	@Builder
 	@JsonCreator
 	public MusicIdentificationQuestion(
+			@JsonProperty("points") long points,
 			@JsonProperty("track_path") String trackPath,
 			@JsonProperty("ask_for") List<TrackProperty> askFor) {
+		super(points);
+		
 		Preconditions.checkArgument(!StringUtils.isBlank(trackPath), "trackPath must not be blank.");
 		this.trackPath = trackPath;
 
