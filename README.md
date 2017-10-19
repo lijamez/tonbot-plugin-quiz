@@ -12,15 +12,71 @@ Play trivia with your guildmates.
 #### Short answer
 Questions which require users to enter the answer. Great for "fill in the blank" questions too.
 
+```
+[5 Points] What was the former name of Thomas Bergersen's 2011 album, Illusions? 
+
+First to answer correctly within 30 seconds wins.
+```
+
 #### Multiple Choice
 Answers are randomized. 
 Trivia packs can include several different correct and incorrect choices. Tonbot can randomly pick from these choices to show to players. 
 
+```
+[5 Points] What was Two Steps From Hell's first public album?
+
+1: Illusions
+2: SkyWorld
+3: Halloween
+4: Invincible
+5: Archangel
+
+First to answer correctly within 30 seconds wins.
+```
+
+## Scoring
+
+
 #### Music Identification
 Plays a song, starting at any point. Players are asked to identify the song name, artist, composer, etc.
 
+```
+[5 points] What is this song's name?
+
+First to answer correctly within 30 seconds wins.
+```
+
+```
+[5 points] Who is the composer of this song?
+
+First to answer correctly within 30 seconds wins.
+```
+
+```
+[5 points] Who is this song's artist?
+
+First to answer correctly within 30 seconds wins.
+```
+
+```
+[5 points] In what year was this song released?
+
+First to answer correctly within 30 seconds wins.
+```
+
 ### Custom Trivia Packs
 Easily create your own trivia questions.
+
+## Usage
+
+To show all of the installed trivia packs, use the ``trivia list`` command. 
+
+To play a trivia pack:
+```
+t, trivia play <Trivia Pack Name>
+```
+
+If the trivia pack contains music, join a voice channel first.
 
 ## Trivia Pack Specification
 
@@ -53,10 +109,13 @@ Sample:
 }
 ```
 
-The structure of each question may differ depending on its type. All questions must have a ``type`` field to indicate what kind of question it is which also dictates the question's structure. ``type`` can be one of the following:
-* ``multiple_choice``
-* ``short_answer``
-* ``music_identification``
+The structure of each question may differ depending on its type. All questions must have:
+
+* A ``type`` field to indicate what kind of question it is which also dictates the question's structure. ``type`` can be one of the following:
+  * ``multiple_choice``
+  * ``short_answer``
+  * ``music_identification``
+* A ``points`` field to indicate the number of points that a question is worth. The score may be scaled.
 
 #### short_answer
 
@@ -69,8 +128,9 @@ Example:
 ```json
 {
   "type" : "short_answer",
+  "points" : 5,
   "question" : " What was the former name of Thomas Bergersen's 2011 album, Illusions?",
-  "answers" : ["Nemesis II"]
+  "answers" : ["Nemesis II", "Nemesis 2"]
 }
 ```
 
@@ -89,6 +149,7 @@ Sample:
 ```json
 {
   "type" : "multiple_choice",
+  "points" : 5,
   "question": "What was Two Steps From Hell's first public album?",
   "choices" : [
     {
@@ -130,6 +191,7 @@ Example:
 ```json
 {
   "type":"music_identification",
+  "points" : 5,
   "song":"mySong.mp3",
   "ask_for" : ["release_year", "title", "artist"]
 }
