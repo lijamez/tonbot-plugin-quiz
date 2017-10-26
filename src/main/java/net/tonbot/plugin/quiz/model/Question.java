@@ -16,7 +16,7 @@ import lombok.Data;
 public abstract class Question {
 
 	private final long points;
-	
+
 	public Question(long points) {
 		Preconditions.checkArgument(points >= 0, "points must not be negative.");
 		this.points = points;

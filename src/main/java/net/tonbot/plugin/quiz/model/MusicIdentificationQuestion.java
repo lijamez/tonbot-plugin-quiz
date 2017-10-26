@@ -28,7 +28,7 @@ public class MusicIdentificationQuestion extends Question {
 			@JsonProperty("track_path") String trackPath,
 			@JsonProperty("ask_for") List<TrackProperty> askFor) {
 		super(points);
-		
+
 		Preconditions.checkArgument(!StringUtils.isBlank(trackPath), "trackPath must not be blank.");
 		this.trackPath = trackPath;
 

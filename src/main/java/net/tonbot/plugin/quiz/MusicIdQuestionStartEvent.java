@@ -18,10 +18,14 @@ class MusicIdQuestionStartEvent extends QuestionStartEvent {
 
 	/**
 	 * 
-	 * @param points The number of points this question is worth.
-	 * @param maxDurationSeconds The max amount of time that this question will be open for.
-	 * @param track The audio track to be played. Non-null.
-	 * @param trackProperty A property of the track to ask for. Non-null.
+	 * @param points
+	 *            The number of points this question is worth.
+	 * @param maxDurationSeconds
+	 *            The max amount of time that this question will be open for.
+	 * @param track
+	 *            The audio track to be played. Non-null.
+	 * @param trackProperty
+	 *            A property of the track to ask for. Non-null.
 	 */
 	@Builder
 	private MusicIdQuestionStartEvent(long points, long maxDurationSeconds, File track, TrackProperty trackProperty) {

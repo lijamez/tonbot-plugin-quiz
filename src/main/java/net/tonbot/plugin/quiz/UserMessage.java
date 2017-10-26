@@ -6,13 +6,12 @@ import lombok.NonNull;
 
 @Data
 @Builder
-class ShortAnswerUserResponse {
+class UserMessage {
 
-	/**
-	 * A verbatim user response.
-	 */
-	@NonNull
-	private final String userResponse;
-	
 	private final long userId;
+
+	@NonNull
+	private final String message;
+
+	private final long messageId;
 }

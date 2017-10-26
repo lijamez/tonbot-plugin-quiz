@@ -8,7 +8,7 @@ import net.tonbot.plugin.quiz.model.TriviaMetadata;
 @Data
 @Builder
 class RoundStartEvent {
-	
+
 	/**
 	 * The trivia that just started.
 	 */

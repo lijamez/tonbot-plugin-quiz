@@ -29,7 +29,7 @@ public class MultipleChoiceQuestion extends Question {
 			@JsonProperty("question") String question,
 			@JsonProperty("choices") List<Choice> choices) {
 		super(points);
-		
+
 		Preconditions.checkArgument(!StringUtils.isBlank(question), "question must not be blank.");
 		this.question = question;
 
