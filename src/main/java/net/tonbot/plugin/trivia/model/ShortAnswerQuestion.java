@@ -25,9 +25,10 @@ public class ShortAnswerQuestion extends Question {
 	@JsonCreator
 	public ShortAnswerQuestion(
 			@JsonProperty("points") long points,
+			@JsonProperty("image") String imageUrl,
 			@JsonProperty("question") String question,
 			@JsonProperty("answers") List<String> answers) {
-		super(points);
+		super(points, imageUrl);
 
 		Preconditions.checkArgument(!StringUtils.isBlank(question), "question must not be blank.");
 		this.question = question;

@@ -25,9 +25,10 @@ public class MusicIdentificationQuestion extends Question {
 	@JsonCreator
 	public MusicIdentificationQuestion(
 			@JsonProperty("points") long points,
+			@JsonProperty("image") String imageUrl,
 			@JsonProperty("track_path") String trackPath,
 			@JsonProperty("ask_for") List<TrackProperty> askFor) {
-		super(points);
+		super(points, imageUrl);
 
 		Preconditions.checkArgument(!StringUtils.isBlank(trackPath), "trackPath must not be blank.");
 		this.trackPath = trackPath;

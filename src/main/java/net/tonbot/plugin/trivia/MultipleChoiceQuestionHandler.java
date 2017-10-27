@@ -36,8 +36,7 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 				.questionNumber(questionNumber)
 				.totalQuestions(totalQuestions)
 				.maxDurationSeconds(maxDurationSeconds)
-				.question(question.getQuestion())
-				.points(question.getPoints())
+				.mcQuestion(question)
 				.choices(choices)
 				.build();
 

@@ -16,6 +16,9 @@ import net.tonbot.common.ActivityDescriptor;
 import net.tonbot.common.BotUtils;
 import net.tonbot.common.TonbotBusinessException;
 import net.tonbot.plugin.trivia.model.Choice;
+import net.tonbot.plugin.trivia.model.MultipleChoiceQuestion;
+import net.tonbot.plugin.trivia.model.Question;
+import net.tonbot.plugin.trivia.model.ShortAnswerQuestion;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
@@ -104,8 +107,8 @@ class PlayActivity implements Activity {
 				public void onMultipleChoiceQuestionStart(
 						MultipleChoiceQuestionStartEvent multipleChoiceQuestionStartEvent) {
 					EmbedBuilder eb = getQuestionEmbedBuilder(multipleChoiceQuestionStartEvent);
-
-					eb.withTitle(multipleChoiceQuestionStartEvent.getQuestion());
+					MultipleChoiceQuestion mcQuestion = multipleChoiceQuestionStartEvent.getMultipleChoiceQuestion();
+					eb.withTitle(mcQuestion.getQuestion());
 
 					StringBuilder sb = new StringBuilder();
 					List<Choice> choices = multipleChoiceQuestionStartEvent.getChoices();
@@ -138,8 +141,8 @@ class PlayActivity implements Activity {
 				@Override
 				public void onShortAnswerQuestionStart(ShortAnswerQuestionStartEvent shortAnswerQuestionStartEvent) {
 					EmbedBuilder eb = getQuestionEmbedBuilder(shortAnswerQuestionStartEvent);
-
-					eb.withTitle(shortAnswerQuestionStartEvent.getQuestion());
+					ShortAnswerQuestion saQuestion = shortAnswerQuestionStartEvent.getShortAnswerQuestion();
+					eb.withTitle(saQuestion.getQuestion());
 
 					botUtils.sendEmbed(event.getChannel(), eb.build());
 				}
@@ -192,11 +195,15 @@ class PlayActivity implements Activity {
 
 				private EmbedBuilder getQuestionEmbedBuilder(QuestionStartEvent qse) {
 					EmbedBuilder eb = new EmbedBuilder();
-					eb.withFooterText(qse.getPoints() + " points");
+					Question question = qse.getQuestion();
+
+					eb.withFooterText(question.getPoints() + " points");
 
 					eb.withAuthorName(String.format("Question %d of %d",
 							qse.getQuestionNumber(),
 							qse.getTotalQuestions()));
+
+					question.getImageUrl().ifPresent(imgUrl -> eb.withImage(imgUrl));
 
 					return eb;
 				}

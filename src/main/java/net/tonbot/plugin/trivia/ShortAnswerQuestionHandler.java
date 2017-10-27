@@ -27,9 +27,8 @@ class ShortAnswerQuestionHandler implements QuestionHandler {
 	@Override
 	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds) {
 		ShortAnswerQuestionStartEvent event = ShortAnswerQuestionStartEvent.builder()
+				.saQuestion(question)
 				.maxDurationSeconds(maxDurationSeconds)
-				.points(question.getPoints())
-				.question(question.getQuestion())
 				.questionNumber(questionNumber)
 				.totalQuestions(totalQuestions)
 				.build();

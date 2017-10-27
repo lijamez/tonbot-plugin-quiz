@@ -1,5 +1,7 @@
 package net.tonbot.plugin.trivia.model;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -16,9 +18,15 @@ import lombok.Data;
 public abstract class Question {
 
 	private final long points;
+	private final String imageUrl;
 
-	public Question(long points) {
+	public Question(long points, String imageUrl) {
 		Preconditions.checkArgument(points >= 0, "points must not be negative.");
 		this.points = points;
+		this.imageUrl = imageUrl;
+	}
+
+	public Optional<String> getImageUrl() {
+		return Optional.ofNullable(imageUrl);
 	}
 }

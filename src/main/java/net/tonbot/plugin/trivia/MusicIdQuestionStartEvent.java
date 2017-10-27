@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import net.tonbot.plugin.trivia.model.MusicIdentificationQuestion;
 import net.tonbot.plugin.trivia.model.TrackProperty;
 
 @Data
@@ -17,12 +18,12 @@ class MusicIdQuestionStartEvent extends QuestionStartEvent {
 	private final TrackProperty trackProperty;
 
 	/**
+	 * @param miQuestion
+	 *            {@link MusicIdentificationQuestion}. Non-null.
 	 * @param questionNumber
 	 *            Question number.
 	 * @param totalQuestions
 	 *            The total number of questions expected to be asked.
-	 * @param points
-	 *            The number of points this question is worth.
 	 * @param maxDurationSeconds
 	 *            The max amount of time that this question will be open for.
 	 * @param track
@@ -32,13 +33,13 @@ class MusicIdQuestionStartEvent extends QuestionStartEvent {
 	 */
 	@Builder
 	private MusicIdQuestionStartEvent(
+			MusicIdentificationQuestion miQuestion,
 			long questionNumber,
 			long totalQuestions,
-			long points,
 			long maxDurationSeconds,
 			File track,
 			TrackProperty trackProperty) {
-		super(questionNumber, totalQuestions, points, maxDurationSeconds);
+		super(miQuestion, questionNumber, totalQuestions, maxDurationSeconds);
 
 		this.track = Preconditions.checkNotNull(track, "track must be non-null.");
 		this.trackProperty = Preconditions.checkNotNull(trackProperty, "trackProperty must be non-null.");

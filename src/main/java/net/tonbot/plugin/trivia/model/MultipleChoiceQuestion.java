@@ -26,9 +26,10 @@ public class MultipleChoiceQuestion extends Question {
 	@JsonCreator
 	public MultipleChoiceQuestion(
 			@JsonProperty("points") long points,
+			@JsonProperty("image") String imageUrl,
 			@JsonProperty("question") String question,
 			@JsonProperty("choices") List<Choice> choices) {
-		super(points);
+		super(points, imageUrl);
 
 		Preconditions.checkArgument(!StringUtils.isBlank(question), "question must not be blank.");
 		this.question = question;
