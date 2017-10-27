@@ -3,6 +3,7 @@ package net.tonbot.plugin.trivia;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -68,7 +69,7 @@ class PlayActivity implements Activity {
 				@Override
 				public void onRoundStart(RoundStartEvent roundStartEvent) {
 					TriviaMetadata metadata = roundStartEvent.getTriviaMetadata();
-					String msg = "Starting " + metadata.getName() + "...";
+					String msg = ":checkered_flag: Starting " + metadata.getName() + "...";
 					botUtils.sendMessageSync(event.getChannel(), msg);
 				}
 
@@ -76,13 +77,24 @@ class PlayActivity implements Activity {
 				public void onRoundEnd(RoundEndEvent roundEndEvent) {
 					Map<Long, Long> scores = roundEndEvent.getScores();
 					StringBuilder sb = new StringBuilder();
-					sb.append("Round finished!\n\nScores:\n");
+					sb.append(":triangular_flag_on_post: Round finished!\n\n");
 
-					for (Entry<Long, Long> entry : scores.entrySet()) {
+					List<Entry<Long, Long>> ranking = scores.entrySet().stream()
+						.sorted((x, y) -> {
+							return (int) (y.getValue() - x.getValue());
+						})
+						.collect(Collectors.toList());
+					
+					long highestScore = ranking.size() > 0 ? ranking.get(0).getValue() : 0;
+					
+					for (Entry<Long, Long> entry : ranking) {
 						IUser user = discordClient.fetchUser(entry.getKey());
 						String displayName = user.getDisplayName(event.getGuild());
 						long score = entry.getValue();
-
+						
+						if (score == highestScore) {
+							sb.append(":trophy: ");
+						}
 						sb.append(String.format("%s: %d points\n", displayName, score));
 					}
 					botUtils.sendMessageSync(event.getChannel(), sb.toString());
