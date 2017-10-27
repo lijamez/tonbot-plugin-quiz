@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import net.tonbot.plugin.trivia.model.QuestionBundle;
@@ -49,6 +50,20 @@ class TriviaLibrary {
 		}
 	}
 
+	/**
+	 * Gets an immutable map of trivia pack names to {@link TriviaPack}s.
+	 */
+	public Map<String, TriviaPack> getTriviaPacks() {
+		return ImmutableMap.copyOf(triviaPacks);
+	}
+
+	/**
+	 * Gets a particular trivia pack by name.
+	 * 
+	 * @param triviaPackName
+	 *            Trivia pack name. Non-null.
+	 * @return An optional {@link TriviaPack}.
+	 */
 	public Optional<TriviaPack> getTriviaPack(String triviaPackName) {
 		Preconditions.checkNotNull(triviaPackName, "triviaPackName must be non-null.");
 

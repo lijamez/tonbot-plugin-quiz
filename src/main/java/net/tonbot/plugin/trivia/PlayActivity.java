@@ -80,18 +80,18 @@ class PlayActivity implements Activity {
 					sb.append(":triangular_flag_on_post: Round finished!\n\n");
 
 					List<Entry<Long, Long>> ranking = scores.entrySet().stream()
-						.sorted((x, y) -> {
-							return (int) (y.getValue() - x.getValue());
-						})
-						.collect(Collectors.toList());
-					
+							.sorted((x, y) -> {
+								return (int) (y.getValue() - x.getValue());
+							})
+							.collect(Collectors.toList());
+
 					long highestScore = ranking.size() > 0 ? ranking.get(0).getValue() : 0;
-					
+
 					for (Entry<Long, Long> entry : ranking) {
 						IUser user = discordClient.fetchUser(entry.getKey());
 						String displayName = user.getDisplayName(event.getGuild());
 						long score = entry.getValue();
-						
+
 						if (score == highestScore) {
 							sb.append(":trophy: ");
 						}
