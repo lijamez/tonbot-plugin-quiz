@@ -2,6 +2,12 @@ package net.tonbot.plugin.quiz.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import net.tonbot.plugin.trivia.model.Choice
+import net.tonbot.plugin.trivia.model.MultipleChoiceQuestion
+import net.tonbot.plugin.trivia.model.MusicIdentificationQuestion
+import net.tonbot.plugin.trivia.model.QuestionBundle
+import net.tonbot.plugin.trivia.model.ShortAnswerQuestion
+import net.tonbot.plugin.trivia.model.TrackProperty
 import spock.lang.Specification
 
 class QuestionBundleTest extends Specification {

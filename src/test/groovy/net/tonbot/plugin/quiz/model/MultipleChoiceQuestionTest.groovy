@@ -2,6 +2,8 @@ package net.tonbot.plugin.quiz.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import net.tonbot.plugin.trivia.model.Choice
+import net.tonbot.plugin.trivia.model.MultipleChoiceQuestion
 import spock.lang.Specification
 
 class MultipleChoiceQuestionTest extends Specification {

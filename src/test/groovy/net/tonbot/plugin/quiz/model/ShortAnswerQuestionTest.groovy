@@ -2,6 +2,7 @@ package net.tonbot.plugin.quiz.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import net.tonbot.plugin.trivia.model.ShortAnswerQuestion
 import spock.lang.Specification
 
 class ShortAnswerQuestionTest extends Specification {
