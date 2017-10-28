@@ -79,9 +79,10 @@ class PlayActivity implements Activity {
 				@Override
 				public void onRoundEnd(RoundEndEvent roundEndEvent) {
 					Map<Long, Long> scores = roundEndEvent.getScores();
-					StringBuilder sb = new StringBuilder();
-					sb.append(":triangular_flag_on_post: Round finished!\n\n");
+					EmbedBuilder eb = new EmbedBuilder();
+					eb.withTitle(":triangular_flag_on_post: Round finished!");
 
+					StringBuilder scoresSb = new StringBuilder();
 					List<Entry<Long, Long>> ranking = scores.entrySet().stream()
 							.sorted((x, y) -> {
 								return (int) (y.getValue() - x.getValue());
@@ -96,11 +97,13 @@ class PlayActivity implements Activity {
 						long score = entry.getValue();
 
 						if (score == highestScore) {
-							sb.append(":trophy: ");
+							scoresSb.append(":trophy: ");
 						}
-						sb.append(String.format("%s: %d points\n", displayName, score));
+						scoresSb.append(String.format("%s: %d points\n", displayName, score));
 					}
-					botUtils.sendMessageSync(event.getChannel(), sb.toString());
+					eb.appendField("Scores", scoresSb.toString(), false);
+
+					botUtils.sendEmbed(event.getChannel(), eb.build());
 				}
 
 				@Override
