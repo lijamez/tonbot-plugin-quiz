@@ -1,7 +1,5 @@
 package net.tonbot.plugin.trivia;
 
-import java.util.Optional;
-
 import com.google.common.base.Preconditions;
 
 import lombok.Builder;
@@ -12,7 +10,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 class ShortAnswerQuestionEndEvent extends QuestionEndEvent {
 
-	private final UserMessage correctUserResponse;
 	private final String acceptableAnswer;
 
 	/**
@@ -25,14 +22,9 @@ class ShortAnswerQuestionEndEvent extends QuestionEndEvent {
 	 *            An acceptable answer. Non-null.
 	 */
 	@Builder
-	public ShortAnswerQuestionEndEvent(boolean timedOut, UserMessage correctUserResponse, String acceptableAnswer) {
-		super(timedOut);
+	public ShortAnswerQuestionEndEvent(boolean timedOut, Win win, String acceptableAnswer) {
+		super(timedOut, win);
 
-		this.correctUserResponse = correctUserResponse;
 		this.acceptableAnswer = Preconditions.checkNotNull(acceptableAnswer, "acceptableAnswer must be non-null.");
-	}
-
-	public Optional<UserMessage> getCorrectUserResponse() {
-		return Optional.ofNullable(correctUserResponse);
 	}
 }

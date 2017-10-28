@@ -83,7 +83,12 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 		MultipleChoiceQuestionEndEvent endEvent = MultipleChoiceQuestionEndEvent.builder()
 				.correctChoice(correctChoice)
 				.timedOut(userMessage == null)
-				.answererId(userMessage != null ? userMessage.getUserId() : null)
+				.win(userMessage != null
+						? Win.builder()
+								.pointsAwarded(question.getPoints())
+								.winningMessage(userMessage)
+								.build()
+						: null)
 				.build();
 
 		listener.onMultipleChoiceQuestionEnd(endEvent);

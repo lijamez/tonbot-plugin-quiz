@@ -47,7 +47,11 @@ class ShortAnswerQuestionHandler implements QuestionHandler {
 	public void notifyEnd(UserMessage userMessage) {
 		ShortAnswerQuestionEndEvent event = ShortAnswerQuestionEndEvent.builder()
 				.acceptableAnswer(question.getAnswers().get(0))
-				.correctUserResponse(userMessage)
+				.win(userMessage != null ? Win.builder()
+						.winningMessage(userMessage)
+						.pointsAwarded(question.getPoints())
+						.build()
+						: null)
 				.build();
 		listener.onShortAnswerQuestionEnd(event);
 	}

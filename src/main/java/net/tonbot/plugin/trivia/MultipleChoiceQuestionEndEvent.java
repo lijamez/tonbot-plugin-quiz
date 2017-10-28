@@ -1,7 +1,5 @@
 package net.tonbot.plugin.trivia;
 
-import java.util.Optional;
-
 import com.google.common.base.Preconditions;
 
 import lombok.Builder;
@@ -14,31 +12,22 @@ import net.tonbot.plugin.trivia.model.Choice;
 class MultipleChoiceQuestionEndEvent extends QuestionEndEvent {
 
 	private final Choice correctChoice;
-	private final Long answererId;
 
 	/**
 	 * 
 	 * @param timedOut
 	 *            True iff the question was never answered.
+	 * @param win
+	 *            The win details, if any. Nullable.
 	 * @param correctChoice
 	 *            The correct choice. Non-null.
-	 * @param answererId
-	 *            The user who answered correctly, if any. Nullable.
+	 * 
 	 */
 	@Builder
-	private MultipleChoiceQuestionEndEvent(boolean timedOut, Choice correctChoice, Long answererId) {
-		super(timedOut);
+	private MultipleChoiceQuestionEndEvent(boolean timedOut, Win win, Choice correctChoice) {
+		super(timedOut, win);
 
 		this.correctChoice = Preconditions.checkNotNull(correctChoice, "correctChoice must be non-null.");
-		this.answererId = answererId;
 	}
 
-	/**
-	 * 
-	 * @return The user ID of the user who answered correctly. Empty if no one
-	 *         answered correctly.
-	 */
-	public Optional<Long> getAnswererId() {
-		return Optional.ofNullable(answererId);
-	}
 }

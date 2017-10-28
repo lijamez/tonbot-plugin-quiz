@@ -123,16 +123,19 @@ class PlayActivity implements Activity {
 
 				@Override
 				public void onMultipleChoiceQuestionEnd(MultipleChoiceQuestionEndEvent multipleChoiceQuestionEndEvent) {
-					Long answererId = multipleChoiceQuestionEndEvent.getAnswererId().orElse(null);
+					Win win = multipleChoiceQuestionEndEvent.getWin().orElse(null);
 					Choice correctChoice = multipleChoiceQuestionEndEvent.getCorrectChoice();
 
 					String msg;
-					if (answererId == null) {
-						msg = String.format("The correct answer was: **%s**", correctChoice.getValue());
+					if (win == null) {
+						msg = String.format(":alarm_clock: Time's up! The correct answer was: **%s**",
+								correctChoice.getValue());
 					} else {
-						IUser user = discordClient.fetchUser(answererId);
-						msg = String.format("**%s** has answered correctly: **%s**",
-								user.getDisplayName(event.getGuild()), correctChoice.getValue());
+						IUser user = discordClient.fetchUser(win.getWinnerUserId());
+						msg = String.format("**%s** wins %d points for the answer: **%s**",
+								user.getDisplayName(event.getGuild()),
+								win.getPointsAwarded(),
+								correctChoice.getValue());
 					}
 
 					botUtils.sendMessageSync(event.getChannel(), msg);
@@ -149,17 +152,19 @@ class PlayActivity implements Activity {
 
 				@Override
 				public void onShortAnswerQuestionEnd(ShortAnswerQuestionEndEvent shortAnswerQuestionEndEvent) {
-
-					UserMessage correctUserResponse = shortAnswerQuestionEndEvent.getCorrectUserResponse().orElse(null);
+					Win win = shortAnswerQuestionEndEvent.getWin().orElse(null);
 					String acceptableAnswer = shortAnswerQuestionEndEvent.getAcceptableAnswer();
 
 					String msg;
-					if (correctUserResponse == null) {
-						msg = String.format("The correct answer was: **%s**", acceptableAnswer);
+					if (win == null) {
+						msg = String.format(":alarm_clock: Time's up! The correct answer was: **%s**",
+								acceptableAnswer);
 					} else {
-						IUser user = discordClient.fetchUser(correctUserResponse.getUserId());
-						msg = String.format("**%s** has answered correctly: **%s**",
-								user.getDisplayName(event.getGuild()), correctUserResponse.getMessage());
+						IUser user = discordClient.fetchUser(win.getWinnerUserId());
+						msg = String.format("**%s** wins %d points for the answer: **%s**",
+								user.getDisplayName(event.getGuild()),
+								win.getPointsAwarded(),
+								win.getWinningMessage().getMessage());
 					}
 
 					botUtils.sendMessageSync(event.getChannel(), msg);
@@ -197,7 +202,8 @@ class PlayActivity implements Activity {
 					EmbedBuilder eb = new EmbedBuilder();
 					Question question = qse.getQuestion();
 
-					eb.withFooterText(question.getPoints() + " points");
+					eb.withFooterText(String.format("First to correctly answer within %d seconds wins %d points",
+							qse.getMaxDurationSeconds(), qse.getQuestion().getPoints()));
 
 					eb.withAuthorName(String.format("Question %d of %d",
 							qse.getQuestionNumber(),

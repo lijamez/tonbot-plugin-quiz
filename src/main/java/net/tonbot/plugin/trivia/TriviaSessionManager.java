@@ -12,7 +12,7 @@ import net.tonbot.plugin.trivia.model.TriviaPack;
 class TriviaSessionManager {
 
 	private static final TriviaConfiguration TRIVIA_CONFIG = TriviaConfiguration.builder()
-			.maxQuestions(5)
+			.maxQuestions(10)
 			.questionTimeSeconds(30)
 			.build();
 
