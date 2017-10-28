@@ -1,5 +1,6 @@
 package net.tonbot.plugin.trivia;
 
+import java.awt.Color;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,16 +39,19 @@ class PlayActivity implements Activity {
 	private final IDiscordClient discordClient;
 	private final TriviaSessionManager triviaSessionManager;
 	private final BotUtils botUtils;
+	private final Color color;
 
 	@Inject
 	public PlayActivity(
 			IDiscordClient discordClient,
 			TriviaSessionManager triviaSessionManager,
-			BotUtils botUtils) {
+			BotUtils botUtils,
+			Color color) {
 		this.discordClient = Preconditions.checkNotNull(discordClient, "discordClient must be non-null.");
 		this.triviaSessionManager = Preconditions.checkNotNull(triviaSessionManager,
 				"triviaSessionManager must be non-null.");
 		this.botUtils = Preconditions.checkNotNull(botUtils, "botUtils must be non-null.");
+		this.color = Preconditions.checkNotNull(color, "color must be non-null.");
 	}
 
 	@Override
@@ -80,6 +84,7 @@ class PlayActivity implements Activity {
 				public void onRoundEnd(RoundEndEvent roundEndEvent) {
 					Map<Long, Long> scores = roundEndEvent.getScores();
 					EmbedBuilder eb = new EmbedBuilder();
+					eb.withColor(color);
 					eb.withTitle(":triangular_flag_on_post: Round finished!");
 
 					StringBuilder scoresSb = new StringBuilder();
@@ -105,7 +110,7 @@ class PlayActivity implements Activity {
 							scoresSb.append(String.format("%s: %d points\n", displayName, score));
 						}
 					}
-					
+
 					eb.appendField("Scoreboard", scoresSb.toString(), false);
 
 					botUtils.sendEmbed(event.getChannel(), eb.build());
@@ -116,6 +121,7 @@ class PlayActivity implements Activity {
 						MultipleChoiceQuestionStartEvent multipleChoiceQuestionStartEvent) {
 					EmbedBuilder eb = getQuestionEmbedBuilder(multipleChoiceQuestionStartEvent);
 					MultipleChoiceQuestion mcQuestion = multipleChoiceQuestionStartEvent.getMultipleChoiceQuestion();
+					eb.withColor(color);
 					eb.withTitle(mcQuestion.getQuestion());
 
 					StringBuilder sb = new StringBuilder();
@@ -191,6 +197,7 @@ class PlayActivity implements Activity {
 					EmbedBuilder eb = new EmbedBuilder();
 					Question question = qse.getQuestion();
 
+					eb.withColor(color);
 					eb.withFooterText(String.format("First to correctly answer within %d seconds wins %d points",
 							qse.getMaxDurationSeconds(), qse.getQuestion().getPoints()));
 

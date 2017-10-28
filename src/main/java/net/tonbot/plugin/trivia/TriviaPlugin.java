@@ -25,6 +25,7 @@ public class TriviaPlugin extends TonbotPlugin {
 		this.injector = Guice.createInjector(new TriviaModule(
 				pluginArgs.getDiscordClient(),
 				pluginArgs.getBotUtils(),
+				pluginArgs.getColor(),
 				triviaPacksDir));
 	}
 

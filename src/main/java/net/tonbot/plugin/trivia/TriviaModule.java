@@ -1,5 +1,6 @@
 package net.tonbot.plugin.trivia;
 
+import java.awt.Color;
 import java.io.File;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,14 +22,17 @@ class TriviaModule extends AbstractModule {
 
 	private final IDiscordClient discordClient;
 	private final BotUtils botUtils;
+	private final Color color;
 	private final File triviaPacksDir;
 
 	public TriviaModule(
 			IDiscordClient discordClient,
 			BotUtils botUtils,
+			Color color,
 			File triviaPacksDir) {
 		this.discordClient = Preconditions.checkNotNull(discordClient, "discordClient must be non-null.");
 		this.botUtils = Preconditions.checkNotNull(botUtils, "botUtils must be non-null.");
+		this.color = Preconditions.checkNotNull(color, "color must be non-null.");
 		this.triviaPacksDir = Preconditions.checkNotNull(triviaPacksDir, "triviaPacksDir must be non-null.");
 	}
 
@@ -39,6 +43,7 @@ class TriviaModule extends AbstractModule {
 		bind(BotUtils.class).toInstance(this.botUtils);
 		bind(ThreadLocalRandom.class).toInstance(ThreadLocalRandom.current());
 		bind(File.class).toInstance(triviaPacksDir);
+		bind(Color.class).toInstance(color);
 	}
 
 	@Provides
