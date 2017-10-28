@@ -25,6 +25,11 @@ interface QuestionHandler {
 	 * 
 	 * @param userMessage
 	 *            The user's message that ended the question. Nullable.
+	 * @param awardedPoints
+	 *            The number of points awarded to this answer.
+	 * @param incorrectAttempts
+	 *            The number of incorrect attempts made before getting the correct
+	 *            answer.
 	 */
-	void notifyEnd(UserMessage userMessage);
+	void notifyEnd(UserMessage userMessage, long awardedPoints, long incorrectAttempts);
 }

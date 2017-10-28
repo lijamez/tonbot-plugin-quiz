@@ -44,12 +44,13 @@ class ShortAnswerQuestionHandler implements QuestionHandler {
 	}
 
 	@Override
-	public void notifyEnd(UserMessage userMessage) {
+	public void notifyEnd(UserMessage userMessage, long pointsAwarded, long incorrectAttempts) {
 		ShortAnswerQuestionEndEvent event = ShortAnswerQuestionEndEvent.builder()
 				.acceptableAnswer(question.getAnswers().get(0))
 				.win(userMessage != null ? Win.builder()
 						.winningMessage(userMessage)
-						.pointsAwarded(question.getPoints())
+						.pointsAwarded(pointsAwarded)
+						.incorrectAttempts(incorrectAttempts)
 						.build()
 						: null)
 				.build();

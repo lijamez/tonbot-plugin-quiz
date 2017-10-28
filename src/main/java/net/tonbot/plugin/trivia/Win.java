@@ -9,11 +9,13 @@ import lombok.Data;
 class Win {
 
 	private final Long pointsAwarded;
+	private final long incorrectAttempts;
 	private final UserMessage winningMessage;
 
 	@Builder
-	private Win(Long pointsAwarded, UserMessage winningMessage) {
+	private Win(Long pointsAwarded, Long incorrectAttempts, UserMessage winningMessage) {
 		this.pointsAwarded = Preconditions.checkNotNull(pointsAwarded, "pointsAwarded must be non-null.");
+		this.incorrectAttempts = Preconditions.checkNotNull(incorrectAttempts, "incorrectAttempts must be non-null.");
 		this.winningMessage = Preconditions.checkNotNull(winningMessage, "winningMessage must be non-null.");
 	}
 

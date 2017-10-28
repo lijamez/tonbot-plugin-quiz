@@ -101,7 +101,7 @@ class PlayActivity implements Activity {
 						}
 						scoresSb.append(String.format("%s: %d points\n", displayName, score));
 					}
-					eb.appendField("Scores", scoresSb.toString(), false);
+					eb.appendField("Scoreboard", scoresSb.toString(), false);
 
 					botUtils.sendEmbed(event.getChannel(), eb.build());
 				}
@@ -129,17 +129,7 @@ class PlayActivity implements Activity {
 					Win win = multipleChoiceQuestionEndEvent.getWin().orElse(null);
 					Choice correctChoice = multipleChoiceQuestionEndEvent.getCorrectChoice();
 
-					String msg;
-					if (win == null) {
-						msg = String.format(":alarm_clock: Time's up! The correct answer was: **%s**",
-								correctChoice.getValue());
-					} else {
-						IUser user = discordClient.fetchUser(win.getWinnerUserId());
-						msg = String.format("**%s** wins %d points for the answer: **%s**",
-								user.getDisplayName(event.getGuild()),
-								win.getPointsAwarded(),
-								correctChoice.getValue());
-					}
+					String msg = getStandardRoundEndMessage(win, correctChoice.getValue());
 
 					botUtils.sendMessageSync(event.getChannel(), msg);
 				}
@@ -158,17 +148,8 @@ class PlayActivity implements Activity {
 					Win win = shortAnswerQuestionEndEvent.getWin().orElse(null);
 					String acceptableAnswer = shortAnswerQuestionEndEvent.getAcceptableAnswer();
 
-					String msg;
-					if (win == null) {
-						msg = String.format(":alarm_clock: Time's up! The correct answer was: **%s**",
-								acceptableAnswer);
-					} else {
-						IUser user = discordClient.fetchUser(win.getWinnerUserId());
-						msg = String.format("**%s** wins %d points for the answer: **%s**",
-								user.getDisplayName(event.getGuild()),
-								win.getPointsAwarded(),
-								win.getWinningMessage().getMessage());
-					}
+					String msg = getStandardRoundEndMessage(win,
+							win != null ? win.getWinningMessage().getMessage() : acceptableAnswer);
 
 					botUtils.sendMessageSync(event.getChannel(), msg);
 				}
@@ -215,6 +196,34 @@ class PlayActivity implements Activity {
 					question.getImageUrl().ifPresent(imgUrl -> eb.withImage(imgUrl));
 
 					return eb;
+				}
+
+				private String getStandardRoundEndMessage(Win win, String correctAnswer) {
+					String msg;
+					if (win == null) {
+						msg = String.format(":alarm_clock: Time's up! The correct answer was: **%s**",
+								correctAnswer);
+					} else {
+						IUser user = discordClient.fetchUser(win.getWinnerUserId());
+						StringBuilder sb = new StringBuilder();
+						sb.append(String.format("**%s** wins %d point(s) for the answer ``%s``",
+								user.getDisplayName(event.getGuild()),
+								win.getPointsAwarded(),
+								correctAnswer));
+
+						if (win.getIncorrectAttempts() > 0) {
+							sb.append(" after ").append(win.getIncorrectAttempts());
+							if (win.getIncorrectAttempts() > 1) {
+								sb.append(" attempts");
+							} else {
+								sb.append(" attempt");
+							}
+						}
+						sb.append(".");
+						msg = sb.toString();
+					}
+
+					return msg;
 				}
 
 			});

@@ -1,9 +1,7 @@
 package net.tonbot.plugin.trivia;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,7 +28,7 @@ class TriviaSession {
 	private TriviaSessionState state;
 	private QuestionHandler currentQuestionHandler;
 
-	private Map<Long, Long> score;
+	private Scorekeeper scorekeeper;
 
 	private TriviaQuestionTimer timer;
 	private ReentrantLock lock;
@@ -53,7 +51,7 @@ class TriviaSession {
 		this.numQuestionsAsked = 0;
 		this.state = TriviaSessionState.NOT_STARTED;
 		this.currentQuestionHandler = null;
-		this.score = new HashMap<>();
+		this.scorekeeper = new Scorekeeper();
 		this.timer = new TriviaQuestionTimer();
 		this.lock = new ReentrantLock();
 	}
@@ -86,7 +84,7 @@ class TriviaSession {
 		lock.lock();
 		try {
 			if (currentQuestionHandler != null) {
-				currentQuestionHandler.notifyEnd(null);
+				currentQuestionHandler.notifyEnd(null, 0, 0);
 			}
 
 			nextQuestionOrEnd();
@@ -101,6 +99,7 @@ class TriviaSession {
 			this.availableQuestions.remove(nextQuestion);
 			this.numQuestionsAsked++;
 
+			this.scorekeeper.setupQuestion(nextQuestion.getPoints());
 			this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, listener);
 			this.currentQuestionHandler.notifyStart(
 					this.numQuestionsAsked,
@@ -113,7 +112,7 @@ class TriviaSession {
 			this.currentQuestionHandler = null;
 			this.state = TriviaSessionState.ENDED;
 			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
-					.scores(score)
+					.scores(scorekeeper.getScores())
 					.build();
 			this.listener.onRoundEnd(roundEndEvent);
 		}
@@ -143,23 +142,20 @@ class TriviaSession {
 
 			if (correct.get()) {
 				this.timer.cancel();
-
-				// Update the score
-				Question question = this.currentQuestionHandler.getQuestion();
-				long newUserScore = this.score.getOrDefault(userMessage.getUserId(), 0L) + question.getPoints();
-				this.score.put(userMessage.getUserId(), newUserScore);
+				long incorrectAttempts = this.scorekeeper.getIncorrectAnswers(userMessage.getUserId());
+				long awardedPoints = this.scorekeeper.logCorrectAnswerAndAdvance(userMessage.getUserId());
 
 				AnswerCorrectEvent answerCorrectEvent = AnswerCorrectEvent.builder()
 						.messageId(userMessage.getMessageId())
 						.build();
 				this.listener.onAnswerCorrect(answerCorrectEvent);
-				this.currentQuestionHandler.notifyEnd(userMessage);
+				this.currentQuestionHandler.notifyEnd(userMessage, awardedPoints, incorrectAttempts);
 
 				nextQuestionOrEnd();
 			} else {
 				// This user participated, so add them to the scores map if they are not already
 				// there.
-				this.score.putIfAbsent(userMessage.getUserId(), 0L);
+				this.scorekeeper.logIncorrectAnswer(userMessage.getUserId());
 
 				AnswerIncorrectEvent event = AnswerIncorrectEvent.builder()
 						.messageId(userMessage.getMessageId())
@@ -186,7 +182,7 @@ class TriviaSession {
 			this.timer.cancel();
 			this.state = TriviaSessionState.ENDED;
 			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
-					.scores(score)
+					.scores(this.scorekeeper.getScores())
 					.build();
 			listener.onRoundEnd(roundEndEvent);
 		} finally {

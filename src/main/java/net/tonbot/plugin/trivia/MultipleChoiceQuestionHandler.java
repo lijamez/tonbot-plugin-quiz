@@ -74,7 +74,7 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 	}
 
 	@Override
-	public void notifyEnd(UserMessage userMessage) {
+	public void notifyEnd(UserMessage userMessage, long pointsAwarded, long incorrectAttempts) {
 		Choice correctChoice = this.choices.stream()
 				.filter(c -> c.isCorrect())
 				.findFirst()
@@ -85,7 +85,8 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 				.timedOut(userMessage == null)
 				.win(userMessage != null
 						? Win.builder()
-								.pointsAwarded(question.getPoints())
+								.pointsAwarded(pointsAwarded)
+								.incorrectAttempts(incorrectAttempts)
 								.winningMessage(userMessage)
 								.build()
 						: null)
