@@ -1,7 +1,11 @@
 package net.tonbot.plugin.quiz.model
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import net.tonbot.plugin.trivia.model.MusicIdentificationQuestion
+import net.tonbot.plugin.trivia.model.TrackProperty
 import spock.lang.Specification
 
 class MusicIdentificationQuestionTest extends Specification {

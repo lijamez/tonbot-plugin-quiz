@@ -1,7 +1,10 @@
 package net.tonbot.plugin.quiz.model
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import net.tonbot.plugin.trivia.model.TriviaMetadata
 import spock.lang.Specification
 
 class TriviaMetadataTest extends Specification {
