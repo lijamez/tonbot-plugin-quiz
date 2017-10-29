@@ -14,7 +14,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import net.tonbot.plugin.trivia.model.QuestionBundle;
+import net.tonbot.plugin.trivia.model.QuestionTemplateBundle;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
 import net.tonbot.plugin.trivia.model.TriviaPack;
 
@@ -24,16 +24,19 @@ class TriviaLibrary {
 
 	private final File triviaPacksDir;
 	private final ObjectMapper objectMapper;
+	private final TriviaPackSanityChecker sanityChecker;
 
-	private Map<String, TriviaPack> triviaPacks;
+	private Map<String, LoadedTrivia> loadedTrivia;
 
 	@Inject
 	public TriviaLibrary(
 			File triviaPacksDir,
-			ObjectMapper objectMapper) {
+			ObjectMapper objectMapper,
+			TriviaPackSanityChecker sanityChecker) {
 		this.triviaPacksDir = Preconditions.checkNotNull(triviaPacksDir, "triviaPacksDir must be non-null.");
 		this.objectMapper = Preconditions.checkNotNull(objectMapper, "objectMapper must be non-null.");
-		this.triviaPacks = new HashMap<>();
+		this.sanityChecker = Preconditions.checkNotNull(sanityChecker, "sanityChecker must be non-null.");
+		this.loadedTrivia = new HashMap<>();
 
 		scan();
 	}
@@ -43,18 +46,22 @@ class TriviaLibrary {
 		for (File dir : dirs) {
 			try {
 				TriviaPack triviaPack = readTriviaPackFromDir(dir);
-				this.triviaPacks.put(dir.getName(), triviaPack);
+				LoadedTrivia loadedTrivia = LoadedTrivia.builder()
+						.triviaPack(triviaPack)
+						.triviaPackDir(dir)
+						.build();
+				this.loadedTrivia.put(dir.getName(), loadedTrivia);
 			} catch (CorruptTriviaPackException e) {
-				LOG.warn("Trivia pack at {} is corrupt.", e);
+				LOG.warn("Trivia pack at {} is corrupt.", dir.getAbsolutePath(), e);
 			}
 		}
 	}
 
 	/**
-	 * Gets an immutable map of trivia pack names to {@link TriviaPack}s.
+	 * Gets an immutable map of trivia pack names to {@link LoadedTrivia}s.
 	 */
-	public Map<String, TriviaPack> getTriviaPacks() {
-		return ImmutableMap.copyOf(triviaPacks);
+	public Map<String, LoadedTrivia> getTrivia() {
+		return ImmutableMap.copyOf(loadedTrivia);
 	}
 
 	/**
@@ -64,10 +71,10 @@ class TriviaLibrary {
 	 *            Trivia pack name. Non-null.
 	 * @return An optional {@link TriviaPack}.
 	 */
-	public Optional<TriviaPack> getTriviaPack(String triviaPackName) {
+	public Optional<LoadedTrivia> getTrivia(String triviaPackName) {
 		Preconditions.checkNotNull(triviaPackName, "triviaPackName must be non-null.");
 
-		return Optional.ofNullable(triviaPacks.get(triviaPackName));
+		return Optional.ofNullable(loadedTrivia.get(triviaPackName));
 	}
 
 	private TriviaPack readTriviaPackFromDir(File triviaPackDir) {
@@ -83,14 +90,21 @@ class TriviaLibrary {
 
 		try {
 			TriviaMetadata metadata = objectMapper.readValue(metadataFile, TriviaMetadata.class);
-			QuestionBundle questionBundle = objectMapper.readValue(questionsFile, QuestionBundle.class);
+			QuestionTemplateBundle questionBundle = objectMapper.readValue(questionsFile, QuestionTemplateBundle.class);
 
-			return TriviaPack.builder()
+			TriviaPack triviaPack = TriviaPack.builder()
 					.metadata(metadata)
 					.questionBundle(questionBundle)
 					.build();
+
+			sanityChecker.check(triviaPack, triviaPackDir);
+
+			return triviaPack;
+
 		} catch (IOException e) {
 			throw new CorruptTriviaPackException("Couldn't deserialize objects from trivia pack.", e);
+		} catch (TriviaPackSanityException e) {
+			throw new CorruptTriviaPackException("Trivia pack has failed sanity checks.", e);
 		}
 	}
 }

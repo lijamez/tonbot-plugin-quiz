@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import net.tonbot.plugin.trivia.model.ShortAnswerQuestion
+import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate
 import spock.lang.Specification
 
-class ShortAnswerQuestionTest extends Specification {
+class ShortAnswerQuestionTemplateTest extends Specification {
 
 	ObjectMapper objMapper;
 
@@ -28,14 +28,14 @@ class ShortAnswerQuestionTest extends Specification {
 		'''
 		
 		and:
-		ShortAnswerQuestion expectedQuestion = ShortAnswerQuestion.builder()
+		ShortAnswerQuestionTemplate expectedQuestion = ShortAnswerQuestionTemplate.builder()
 			.points(5)
 			.question("Test Question?")
 			.answers(["A", "B", "C"])
 			.build()
 		
 		when:
-		ShortAnswerQuestion question = objMapper.readValue(questionStr, ShortAnswerQuestion.class)
+		ShortAnswerQuestionTemplate question = objMapper.readValue(questionStr, ShortAnswerQuestionTemplate.class)
 		
 		then:
 		question == expectedQuestion
@@ -53,7 +53,7 @@ class ShortAnswerQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, ShortAnswerQuestion.class)
+		objMapper.readValue(questionStr, ShortAnswerQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException
@@ -71,7 +71,7 @@ class ShortAnswerQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, ShortAnswerQuestion.class)
+		objMapper.readValue(questionStr, ShortAnswerQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException

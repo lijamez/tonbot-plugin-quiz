@@ -1,13 +1,11 @@
 package net.tonbot.plugin.trivia;
 
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-
-import net.tonbot.plugin.trivia.model.TriviaPack;
 
 class TriviaSessionManager {
 
@@ -17,14 +15,14 @@ class TriviaSessionManager {
 			.build();
 
 	private final TriviaLibrary triviaLibrary;
-	private final ThreadLocalRandom random;
+	private final Random random;
 
 	private final ConcurrentHashMap<TriviaSessionKey, TriviaSession> sessions;
 
 	@Inject
 	public TriviaSessionManager(
 			TriviaLibrary triviaLibrary,
-			ThreadLocalRandom random) {
+			Random random) {
 		this.triviaLibrary = Preconditions.checkNotNull(triviaLibrary, "triviaLibrary must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 
@@ -53,9 +51,9 @@ class TriviaSessionManager {
 		Preconditions.checkNotNull(sessionKey, "sessionKey must be non-null.");
 		Preconditions.checkNotNull(triviaPackName, "triviaPackName must be non-null.");
 
-		TriviaPack triviaPack = triviaLibrary.getTriviaPack(triviaPackName)
+		LoadedTrivia loadedTrivia = triviaLibrary.getTrivia(triviaPackName)
 				.orElseThrow(() -> new InvalidTriviaPackException("Trivia pack " + triviaPackName + " is not valid."));
-		TriviaSession triviaSession = new TriviaSession(listener, triviaPack, TRIVIA_CONFIG, random);
+		TriviaSession triviaSession = new TriviaSession(listener, loadedTrivia, TRIVIA_CONFIG, random);
 		TriviaSession oldSession = this.sessions.put(sessionKey, triviaSession);
 
 		if (oldSession != null) {

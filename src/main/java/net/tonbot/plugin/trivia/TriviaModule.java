@@ -2,8 +2,8 @@ package net.tonbot.plugin.trivia;
 
 import java.awt.Color;
 import java.io.File;
+import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +41,6 @@ class TriviaModule extends AbstractModule {
 		bind(IDiscordClient.class).toInstance(discordClient);
 		bind(TriviaSessionManager.class).in(Scopes.SINGLETON);
 		bind(BotUtils.class).toInstance(this.botUtils);
-		bind(ThreadLocalRandom.class).toInstance(ThreadLocalRandom.current());
 		bind(File.class).toInstance(triviaPacksDir);
 		bind(Color.class).toInstance(color);
 	}
@@ -65,5 +64,11 @@ class TriviaModule extends AbstractModule {
 		objMapper.enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES);
 
 		return objMapper;
+	}
+
+	@Provides
+	@Singleton
+	Random random() {
+		return new Random(System.currentTimeMillis());
 	}
 }

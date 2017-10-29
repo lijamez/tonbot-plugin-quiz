@@ -3,14 +3,14 @@ package net.tonbot.plugin.quiz.model
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import net.tonbot.plugin.trivia.model.Choice
-import net.tonbot.plugin.trivia.model.MultipleChoiceQuestion
-import net.tonbot.plugin.trivia.model.MusicIdentificationQuestion
-import net.tonbot.plugin.trivia.model.QuestionBundle
-import net.tonbot.plugin.trivia.model.ShortAnswerQuestion
+import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate
+import net.tonbot.plugin.trivia.model.MusicIdentificationQuestionTemplate
+import net.tonbot.plugin.trivia.model.QuestionTemplateBundle
+import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate
 import net.tonbot.plugin.trivia.model.TrackProperty
 import spock.lang.Specification
 
-class QuestionBundleTest extends Specification {
+class QuestionTemplateBundleTest extends Specification {
 
 	ObjectMapper objMapper;
 
@@ -56,13 +56,13 @@ class QuestionBundleTest extends Specification {
 		'''
 		
 		and:
-		QuestionBundle expectedQuestionBundle = QuestionBundle.builder()
-			.questions([
-				ShortAnswerQuestion.builder()
+		QuestionTemplateBundle expectedQuestionBundle = QuestionTemplateBundle.builder()
+			.questionTemplates([
+				ShortAnswerQuestionTemplate.builder()
 					.question("What was the former name of Thomas Bergersen's 2011 album, Illusions?")
 					.answers(["Nemesis II", "Nemesis 2"])
 					.build(),
-				MultipleChoiceQuestion.builder()
+				MultipleChoiceQuestionTemplate.builder()
 					.question("What was Two Steps From Hell's first public album?")
 					.choices([
 						Choice.builder()
@@ -79,7 +79,7 @@ class QuestionBundleTest extends Specification {
 							.build()
 						])
 					.build(),
-				MusicIdentificationQuestion.builder()
+				MusicIdentificationQuestionTemplate.builder()
 					.trackPath("mySong.mp3")
 					.askFor([
 						TrackProperty.RELEASE_YEAR,
@@ -92,7 +92,7 @@ class QuestionBundleTest extends Specification {
 			.build()
 		
 		when:
-		QuestionBundle qb = objMapper.readValue(questionBundleStr, QuestionBundle.class)
+		QuestionTemplateBundle qb = objMapper.readValue(questionBundleStr, QuestionTemplateBundle.class)
 		
 		then:
 		qb == expectedQuestionBundle

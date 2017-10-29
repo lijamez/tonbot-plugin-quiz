@@ -12,5 +12,5 @@ public class TriviaPack {
 	private final TriviaMetadata metadata;
 
 	@NonNull
-	private final QuestionBundle questionBundle;
+	private final QuestionTemplateBundle questionBundle;
 }

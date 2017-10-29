@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class MultipleChoiceQuestion extends Question {
+public class MultipleChoiceQuestionTemplate extends QuestionTemplate {
 
 	private final String question;
 	private final List<Choice> correctChoices;
@@ -24,12 +24,12 @@ public class MultipleChoiceQuestion extends Question {
 
 	@Builder
 	@JsonCreator
-	public MultipleChoiceQuestion(
+	public MultipleChoiceQuestionTemplate(
 			@JsonProperty("points") long points,
-			@JsonProperty("image") String imageUrl,
+			@JsonProperty("images") List<String> imagePaths,
 			@JsonProperty("question") String question,
 			@JsonProperty("choices") List<Choice> choices) {
-		super(points, imageUrl);
+		super(points, imagePaths);
 
 		Preconditions.checkArgument(!StringUtils.isBlank(question), "question must not be blank.");
 		this.question = question;

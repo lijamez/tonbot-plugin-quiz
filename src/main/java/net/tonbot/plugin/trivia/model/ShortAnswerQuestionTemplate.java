@@ -16,19 +16,19 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ShortAnswerQuestion extends Question {
+public class ShortAnswerQuestionTemplate extends QuestionTemplate {
 
 	private final String question;
 	private final List<String> answers;
 
 	@Builder
 	@JsonCreator
-	public ShortAnswerQuestion(
+	public ShortAnswerQuestionTemplate(
 			@JsonProperty("points") long points,
-			@JsonProperty("image") String imageUrl,
+			@JsonProperty("images") List<String> imagePaths,
 			@JsonProperty("question") String question,
 			@JsonProperty("answers") List<String> answers) {
-		super(points, imageUrl);
+		super(points, imagePaths);
 
 		Preconditions.checkArgument(!StringUtils.isBlank(question), "question must not be blank.");
 		this.question = question;

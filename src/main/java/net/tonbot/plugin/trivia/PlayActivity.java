@@ -1,11 +1,17 @@
 package net.tonbot.plugin.trivia;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Preconditions;
@@ -17,9 +23,8 @@ import net.tonbot.common.ActivityDescriptor;
 import net.tonbot.common.BotUtils;
 import net.tonbot.common.TonbotBusinessException;
 import net.tonbot.plugin.trivia.model.Choice;
-import net.tonbot.plugin.trivia.model.MultipleChoiceQuestion;
-import net.tonbot.plugin.trivia.model.Question;
-import net.tonbot.plugin.trivia.model.ShortAnswerQuestion;
+import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate;
+import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
@@ -123,7 +128,8 @@ class PlayActivity implements Activity {
 				public void onMultipleChoiceQuestionStart(
 						MultipleChoiceQuestionStartEvent multipleChoiceQuestionStartEvent) {
 					EmbedBuilder eb = getQuestionEmbedBuilder(multipleChoiceQuestionStartEvent);
-					MultipleChoiceQuestion mcQuestion = multipleChoiceQuestionStartEvent.getMultipleChoiceQuestion();
+					MultipleChoiceQuestionTemplate mcQuestion = multipleChoiceQuestionStartEvent
+							.getMultipleChoiceQuestion();
 					eb.withColor(color);
 					eb.withTitle(mcQuestion.getQuestion());
 
@@ -135,7 +141,7 @@ class PlayActivity implements Activity {
 					}
 					eb.withDescription(sb.toString());
 
-					botUtils.sendEmbed(event.getChannel(), eb.build());
+					sendQuestionEmbed(eb, multipleChoiceQuestionStartEvent);
 				}
 
 				@Override
@@ -151,10 +157,11 @@ class PlayActivity implements Activity {
 				@Override
 				public void onShortAnswerQuestionStart(ShortAnswerQuestionStartEvent shortAnswerQuestionStartEvent) {
 					EmbedBuilder eb = getQuestionEmbedBuilder(shortAnswerQuestionStartEvent);
-					ShortAnswerQuestion saQuestion = shortAnswerQuestionStartEvent.getShortAnswerQuestion();
+					ShortAnswerQuestionTemplate saQuestion = shortAnswerQuestionStartEvent.getShortAnswerQuestion();
+
 					eb.withTitle(saQuestion.getQuestion());
 
-					botUtils.sendEmbed(event.getChannel(), eb.build());
+					sendQuestionEmbed(eb, shortAnswerQuestionStartEvent);
 				}
 
 				@Override
@@ -196,9 +203,48 @@ class PlayActivity implements Activity {
 					}
 				}
 
+				/**
+				 * Sends a question embed. This method will add an image, if the
+				 * {@link QuestionStartEvent} has one.
+				 * 
+				 * @param eb
+				 *            The {@link EmbedBuilder}. Non-null.
+				 * @param qse
+				 *            The {@link QuestionStartEvent}. Non-null.
+				 */
+				private void sendQuestionEmbed(EmbedBuilder eb, QuestionStartEvent qse) {
+					File imageFile = qse.getImage().orElse(null);
+
+					if (imageFile != null) {
+						String extension = FilenameUtils.getExtension(imageFile.getName());
+						String baseName = UUID.randomUUID().toString();
+						String discordFriendlyFileName = baseName.replaceAll("[^A-Za-z0-9]", "") + "." + extension;
+
+						eb.withImage("attachment://" + discordFriendlyFileName);
+
+						try {
+							FileInputStream fis = new FileInputStream(imageFile);
+							botUtils.sendEmbed(event.getChannel(), eb.build(), fis, discordFriendlyFileName);
+						} catch (FileNotFoundException e) {
+							// Should never happen because TriviaLibrary performs a file existence check.
+							throw new UncheckedIOException(e);
+						}
+
+					} else {
+						botUtils.sendEmbed(event.getChannel(), eb.build());
+					}
+				}
+
+				/**
+				 * Gets a {@link EmbedBuilder} with some settings already set, such as color,
+				 * footer text, and question number.
+				 * 
+				 * @param qse
+				 *            {@link QuestionStartEvent}. Non-null.
+				 * @return A {@link EmbedBuilder} with some settings already set.
+				 */
 				private EmbedBuilder getQuestionEmbedBuilder(QuestionStartEvent qse) {
 					EmbedBuilder eb = new EmbedBuilder();
-					Question question = qse.getQuestion();
 
 					eb.withColor(color);
 					eb.withFooterText(String.format("First to correctly answer within %d seconds wins %d points",
@@ -207,8 +253,6 @@ class PlayActivity implements Activity {
 					eb.withAuthorName(String.format("Question %d of %d",
 							qse.getQuestionNumber(),
 							qse.getTotalQuestions()));
-
-					question.getImageUrl().ifPresent(imgUrl -> eb.withImage(imgUrl));
 
 					return eb;
 				}
@@ -229,9 +273,9 @@ class PlayActivity implements Activity {
 						if (win.getIncorrectAttempts() > 0) {
 							sb.append(" after ").append(win.getIncorrectAttempts());
 							if (win.getIncorrectAttempts() > 1) {
-								sb.append(" attempts");
+								sb.append(" incorrect attempts");
 							} else {
-								sb.append(" attempt");
+								sb.append(" incorrect attempt");
 							}
 						}
 						sb.append(".");

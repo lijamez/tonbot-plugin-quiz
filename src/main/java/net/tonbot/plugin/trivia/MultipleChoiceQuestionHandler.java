@@ -1,5 +1,6 @@
 package net.tonbot.plugin.trivia;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,34 +9,38 @@ import java.util.Optional;
 import com.google.common.base.Preconditions;
 
 import net.tonbot.plugin.trivia.model.Choice;
-import net.tonbot.plugin.trivia.model.MultipleChoiceQuestion;
-import net.tonbot.plugin.trivia.model.Question;
+import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate;
+import net.tonbot.plugin.trivia.model.QuestionTemplate;
 
 class MultipleChoiceQuestionHandler implements QuestionHandler {
 
 	private static final int MAX_CHOICES = 5;
 
-	private final MultipleChoiceQuestion question;
+	private final MultipleChoiceQuestionTemplate question;
 	private final TriviaListener listener;
 	private final List<Choice> choices;
 
-	public MultipleChoiceQuestionHandler(MultipleChoiceQuestion question, TriviaListener listener) {
+	public MultipleChoiceQuestionHandler(
+			MultipleChoiceQuestionTemplate question,
+			TriviaListener listener) {
 		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
 		this.choices = getChoices(this.question);
 	}
 
 	@Override
-	public Question getQuestion() {
+	public QuestionTemplate getQuestion() {
 		return question;
 	}
 
 	@Override
-	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds) {
+	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds, File imageFile) {
+
 		MultipleChoiceQuestionStartEvent startEvent = MultipleChoiceQuestionStartEvent.builder()
 				.questionNumber(questionNumber)
 				.totalQuestions(totalQuestions)
 				.maxDurationSeconds(maxDurationSeconds)
+				.imageFile(imageFile)
 				.mcQuestion(question)
 				.choices(choices)
 				.build();
@@ -47,12 +52,12 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 	 * Selects a list of choices. Only 1 of those choices are correct.
 	 * 
 	 * @param question
-	 *            A {@link MultipleChoiceQuestion}.
+	 *            A {@link MultipleChoiceQuestionTemplate}.
 	 * @return A list of choices, only 1 of which are correct.
 	 */
-	private List<Choice> getChoices(MultipleChoiceQuestion question) {
-		List<Choice> incorrectChoices = pickRandomly(question.getIncorrectChoices(), MAX_CHOICES - 1);
-		List<Choice> correctChoices = pickRandomly(question.getCorrectChoices(), 1);
+	private List<Choice> getChoices(MultipleChoiceQuestionTemplate question) {
+		List<Choice> incorrectChoices = pickRandomSubset(question.getIncorrectChoices(), MAX_CHOICES - 1);
+		List<Choice> correctChoices = pickRandomSubset(question.getCorrectChoices(), 1);
 
 		List<Choice> allChoices = new ArrayList<>();
 		allChoices.addAll(incorrectChoices);
@@ -62,7 +67,7 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 		return allChoices;
 	}
 
-	private List<Choice> pickRandomly(List<Choice> list, int num) {
+	private List<Choice> pickRandomSubset(List<Choice> list, int num) {
 		if (list.isEmpty()) {
 			return list;
 		} else {

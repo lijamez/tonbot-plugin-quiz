@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
-import net.tonbot.plugin.trivia.model.MusicIdentificationQuestion
+import net.tonbot.plugin.trivia.model.MusicIdentificationQuestionTemplate
 import net.tonbot.plugin.trivia.model.TrackProperty
 import spock.lang.Specification
 
-class MusicIdentificationQuestionTest extends Specification {
+class MusicIdentificationQuestionTemplateTest extends Specification {
 
 	ObjectMapper objMapper;
 
@@ -29,7 +29,7 @@ class MusicIdentificationQuestionTest extends Specification {
 		'''
 		
 		and:
-		MusicIdentificationQuestion expectedQuestion = MusicIdentificationQuestion.builder()
+		MusicIdentificationQuestionTemplate expectedQuestion = MusicIdentificationQuestionTemplate.builder()
 			.points(5)
 			.trackPath("test.mp3")
 			.askFor([
@@ -39,7 +39,7 @@ class MusicIdentificationQuestionTest extends Specification {
 			.build()
 		
 		when:
-		MusicIdentificationQuestion question = objMapper.readValue(questionStr, MusicIdentificationQuestion.class)
+		MusicIdentificationQuestionTemplate question = objMapper.readValue(questionStr, MusicIdentificationQuestionTemplate.class)
 		
 		then:
 		question == expectedQuestion
@@ -57,7 +57,7 @@ class MusicIdentificationQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, MusicIdentificationQuestion.class)
+		objMapper.readValue(questionStr, MusicIdentificationQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException
@@ -75,7 +75,7 @@ class MusicIdentificationQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, MusicIdentificationQuestion.class)
+		objMapper.readValue(questionStr, MusicIdentificationQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException

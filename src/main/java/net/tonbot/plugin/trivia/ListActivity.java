@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import net.tonbot.common.Activity;
 import net.tonbot.common.ActivityDescriptor;
 import net.tonbot.common.BotUtils;
-import net.tonbot.plugin.trivia.model.TriviaPack;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 
 class ListActivity implements Activity {
@@ -40,13 +39,15 @@ class ListActivity implements Activity {
 	@Override
 	public void enact(MessageReceivedEvent event, String args) {
 
-		Map<String, TriviaPack> triviaPacks = triviaLibrary.getTriviaPacks();
+		Map<String, LoadedTrivia> triviaMap = triviaLibrary.getTrivia();
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("**Trivia Packs:**\n\n");
 
-		for (Entry<String, TriviaPack> entry : triviaPacks.entrySet()) {
-			sb.append(String.format("``%s``: %s\n", entry.getKey(), entry.getValue().getMetadata().getDescription()));
+		for (Entry<String, LoadedTrivia> entry : triviaMap.entrySet()) {
+			sb.append(String.format("``%s``: %s\n",
+					entry.getKey(),
+					entry.getValue().getTriviaPack().getMetadata().getDescription()));
 		}
 
 		botUtils.sendMessage(event.getChannel(), sb.toString());

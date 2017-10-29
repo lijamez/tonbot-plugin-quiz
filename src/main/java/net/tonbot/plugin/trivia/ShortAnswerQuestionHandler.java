@@ -1,36 +1,40 @@
 package net.tonbot.plugin.trivia;
 
+import java.io.File;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Preconditions;
 
-import net.tonbot.plugin.trivia.model.Question;
-import net.tonbot.plugin.trivia.model.ShortAnswerQuestion;
+import net.tonbot.plugin.trivia.model.QuestionTemplate;
+import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate;
 
 class ShortAnswerQuestionHandler implements QuestionHandler {
 
-	private final ShortAnswerQuestion question;
+	private final ShortAnswerQuestionTemplate question;
 	private final TriviaListener listener;
 
-	public ShortAnswerQuestionHandler(ShortAnswerQuestion question, TriviaListener listener) {
+	public ShortAnswerQuestionHandler(
+			ShortAnswerQuestionTemplate question,
+			TriviaListener listener) {
 		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
 	}
 
 	@Override
-	public Question getQuestion() {
+	public QuestionTemplate getQuestion() {
 		return question;
 	}
 
 	@Override
-	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds) {
+	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds, File imageFile) {
 		ShortAnswerQuestionStartEvent event = ShortAnswerQuestionStartEvent.builder()
 				.saQuestion(question)
 				.maxDurationSeconds(maxDurationSeconds)
 				.questionNumber(questionNumber)
 				.totalQuestions(totalQuestions)
+				.imageFile(imageFile)
 				.build();
 
 		listener.onShortAnswerQuestionStart(event);

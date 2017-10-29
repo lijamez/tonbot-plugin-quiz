@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import net.tonbot.plugin.trivia.model.Choice
-import net.tonbot.plugin.trivia.model.MultipleChoiceQuestion
+import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate
 import spock.lang.Specification
 
-class MultipleChoiceQuestionTest extends Specification {
+class MultipleChoiceQuestionTemplateTest extends Specification {
 
 	ObjectMapper objMapper;
 
@@ -38,7 +38,7 @@ class MultipleChoiceQuestionTest extends Specification {
 		'''
 		
 		and:
-		MultipleChoiceQuestion expectedQuestion = MultipleChoiceQuestion.builder()
+		MultipleChoiceQuestionTemplate expectedQuestion = MultipleChoiceQuestionTemplate.builder()
 			.points(5)
 			.question("Sample Question?")
 			.choices([
@@ -55,7 +55,7 @@ class MultipleChoiceQuestionTest extends Specification {
 				
 		
 		when:
-		MultipleChoiceQuestion question = objMapper.readValue(questionStr, MultipleChoiceQuestion.class)
+		MultipleChoiceQuestionTemplate question = objMapper.readValue(questionStr, MultipleChoiceQuestionTemplate.class)
 		
 		then:
 		question == expectedQuestion
@@ -78,7 +78,7 @@ class MultipleChoiceQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, MultipleChoiceQuestion.class)
+		objMapper.readValue(questionStr, MultipleChoiceQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException
@@ -101,7 +101,7 @@ class MultipleChoiceQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, MultipleChoiceQuestion.class)
+		objMapper.readValue(questionStr, MultipleChoiceQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException
@@ -119,7 +119,7 @@ class MultipleChoiceQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, MultipleChoiceQuestion.class)
+		objMapper.readValue(questionStr, MultipleChoiceQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException
@@ -146,7 +146,7 @@ class MultipleChoiceQuestionTest extends Specification {
 		'''
 		
 		when:
-		objMapper.readValue(questionStr, MultipleChoiceQuestion.class)
+		objMapper.readValue(questionStr, MultipleChoiceQuestionTemplate.class)
 		
 		then:
 		thrown JsonMappingException
