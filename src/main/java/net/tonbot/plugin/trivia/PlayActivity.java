@@ -76,7 +76,10 @@ class PlayActivity implements Activity {
 				@Override
 				public void onRoundStart(RoundStartEvent roundStartEvent) {
 					TriviaMetadata metadata = roundStartEvent.getTriviaMetadata();
-					String msg = ":checkered_flag: Starting " + metadata.getName() + "...";
+					String msg = String.format(
+							":checkered_flag: Starting ``%s`` in %d seconds...",
+							metadata.getName(),
+							roundStartEvent.getStartingInSeconds());
 					botUtils.sendMessageSync(event.getChannel(), msg);
 				}
 

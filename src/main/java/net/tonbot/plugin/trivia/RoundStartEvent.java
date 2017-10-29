@@ -14,4 +14,7 @@ class RoundStartEvent {
 	 */
 	@NonNull
 	private final TriviaMetadata triviaMetadata;
+
+	@NonNull
+	private final Long startingInSeconds;
 }

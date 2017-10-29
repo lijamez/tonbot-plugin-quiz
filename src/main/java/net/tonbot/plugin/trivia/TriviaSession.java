@@ -3,6 +3,8 @@ package net.tonbot.plugin.trivia;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -15,6 +17,8 @@ import net.tonbot.plugin.trivia.model.TriviaPack;
  * This class is thread safe.
  */
 class TriviaSession {
+
+	private static final long START_DELAY_SECONDS = 3;
 
 	private final QuietTriviaListener listener;
 	private final TriviaPack triviaPack;
@@ -30,6 +34,7 @@ class TriviaSession {
 
 	private Scorekeeper scorekeeper;
 
+	private Timer startTimer;
 	private TriviaQuestionTimer timer;
 	private ReentrantLock lock;
 
@@ -52,6 +57,7 @@ class TriviaSession {
 		this.state = TriviaSessionState.NOT_STARTED;
 		this.currentQuestionHandler = null;
 		this.scorekeeper = new Scorekeeper();
+		this.startTimer = new Timer();
 		this.timer = new TriviaQuestionTimer();
 		this.lock = new ReentrantLock();
 	}
@@ -64,11 +70,28 @@ class TriviaSession {
 		try {
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(triviaPack.getMetadata())
+					.startingInSeconds(START_DELAY_SECONDS)
 					.build();
 
 			listener.onRoundStart(roundStartEvent);
-			this.state = TriviaSessionState.STARTED;
-			nextQuestionOrEnd();
+
+			// This delay prevents a race condition from occurring which causes the trivia
+			// session to treat the user's "play" command as an input in takeInput().
+			this.state = TriviaSessionState.STARTING;
+			this.startTimer.schedule(new TimerTask() {
+
+				@Override
+				public void run() {
+					lock.lock();
+					try {
+						state = TriviaSessionState.STARTED;
+						nextQuestionOrEnd();
+					} finally {
+						lock.unlock();
+					}
+				}
+
+			}, START_DELAY_SECONDS * 1000);
 		} finally {
 			lock.unlock();
 		}
@@ -198,8 +221,29 @@ class TriviaSession {
 	}
 
 	private static enum TriviaSessionState {
+		/**
+		 * The initial state. May be transitioned into the {@code STARTING} state.
+		 */
 		NOT_STARTED,
+
+		/**
+		 * The pause between NOT_STARTED and STARTED. This state allows users to prepare
+		 * and prevents a race condition from occurring where the "trivia play" command
+		 * would be treated as input. May be transitioned into the {@code STARTED}
+		 * state.
+		 */
+		STARTING,
+
+		/**
+		 * The state where questions are being asked and users should respond to them.
+		 * May be transitioned into the {@code ENDED} state.
+		 */
 		STARTED,
+
+		/**
+		 * The state where all questions have been asked and the trivia session has
+		 * concluded. It's not possible to transition out of this state.
+		 */
 		ENDED
 	}
 }
