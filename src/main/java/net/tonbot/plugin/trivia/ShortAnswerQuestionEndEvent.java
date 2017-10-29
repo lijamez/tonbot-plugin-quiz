@@ -16,13 +16,16 @@ class ShortAnswerQuestionEndEvent extends QuestionEndEvent {
 	 * 
 	 * @param timedOut
 	 *            Whether if the question ended due to a timeout.
-	 * @param correctUserResponse
-	 *            The correct user response, if any. Nullable.
+	 * @param win
+	 *            Details of a win, if any. Nullable.
 	 * @param acceptableAnswer
 	 *            An acceptable answer. Non-null.
 	 */
 	@Builder
-	public ShortAnswerQuestionEndEvent(boolean timedOut, Win win, String acceptableAnswer) {
+	public ShortAnswerQuestionEndEvent(
+			boolean timedOut,
+			Win win,
+			String acceptableAnswer) {
 		super(timedOut, win);
 
 		this.acceptableAnswer = Preconditions.checkNotNull(acceptableAnswer, "acceptableAnswer must be non-null.");

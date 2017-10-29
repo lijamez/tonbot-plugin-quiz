@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.common.base.Preconditions;
@@ -18,7 +19,7 @@ import net.tonbot.plugin.trivia.model.QuestionTemplate;
  */
 class TriviaSession {
 
-	private static final long START_DELAY_SECONDS = 3;
+	private static final long PRE_QUESTION_DELAY_SECONDS = 3;
 
 	private final QuietTriviaListener listener;
 	private final LoadedTrivia trivia;
@@ -34,7 +35,7 @@ class TriviaSession {
 
 	private Scorekeeper scorekeeper;
 
-	private Timer startTimer;
+	private ScheduledExecutorService delayTimer;
 	private TriviaQuestionTimer timer;
 	private ReentrantLock lock;
 
@@ -58,41 +59,28 @@ class TriviaSession {
 		this.state = TriviaSessionState.NOT_STARTED;
 		this.currentQuestionHandler = null;
 		this.scorekeeper = new Scorekeeper();
-		this.startTimer = new Timer();
+		this.delayTimer = Executors.newScheduledThreadPool(1);
 		this.timer = new TriviaQuestionTimer();
 		this.lock = new ReentrantLock();
 	}
 
 	public void start() {
-		Preconditions.checkState(
-				this.state == TriviaSessionState.NOT_STARTED, "The session has already started or has already ended.");
-
 		lock.lock();
 		try {
+			Preconditions.checkState(
+					this.state == TriviaSessionState.NOT_STARTED,
+					"The session has already started or has already ended.");
+
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(trivia.getTriviaPack().getMetadata())
-					.startingInSeconds(START_DELAY_SECONDS)
+					.startingInSeconds(PRE_QUESTION_DELAY_SECONDS)
 					.build();
 
 			listener.onRoundStart(roundStartEvent);
 
 			// This delay prevents a race condition from occurring which causes the trivia
 			// session to treat the user's "play" command as an input in takeInput().
-			this.state = TriviaSessionState.STARTING;
-			this.startTimer.schedule(new TimerTask() {
-
-				@Override
-				public void run() {
-					lock.lock();
-					try {
-						state = TriviaSessionState.STARTED;
-						nextQuestionOrEnd();
-					} finally {
-						lock.unlock();
-					}
-				}
-
-			}, START_DELAY_SECONDS * 1000);
+			loadNextQuestionOrEnd();
 		} finally {
 			lock.unlock();
 		}
@@ -101,48 +89,73 @@ class TriviaSession {
 	/**
 	 * This method is to be called by a separate thread to time out a question.
 	 */
-	public void timeoutQuestion() {
-		Preconditions.checkState(
-				this.state == TriviaSessionState.STARTED, "The session has not yet started or has already ended.");
-
+	private void timeoutQuestion() {
 		lock.lock();
 		try {
+			Preconditions.checkState(
+					this.state == TriviaSessionState.WAITING_FOR_ANSWER,
+					"The session has not yet started or has already ended.");
+
 			if (currentQuestionHandler != null) {
 				currentQuestionHandler.notifyEnd(null, 0, 0);
 			}
 
-			nextQuestionOrEnd();
+			loadNextQuestionOrEnd();
 		} finally {
 			lock.unlock();
 		}
 	}
 
-	private void nextQuestionOrEnd() {
-		if (totalQuestionsToAsk - numQuestionsAsked > 0) {
-			QuestionTemplate nextQuestion = pickRandomElement(this.availableQuestions);
-			this.availableQuestions.remove(nextQuestion);
-			this.numQuestionsAsked++;
+	private void loadNextQuestionOrEnd() {
+		this.state = TriviaSessionState.LOADING_NEXT_QUESTION;
+		boolean hasNextQuestion = totalQuestionsToAsk - numQuestionsAsked > 0;
+		Runnable runnable;
+		if (hasNextQuestion) {
+			runnable = () -> {
+				lock.lock();
+				try {
+					state = TriviaSessionState.WAITING_FOR_ANSWER;
+					QuestionTemplate nextQuestion = pickRandomElement(this.availableQuestions);
+					this.availableQuestions.remove(nextQuestion);
+					this.numQuestionsAsked++;
 
-			File imageFile = getRandomImageFile(nextQuestion);
+					File imageFile = getRandomImageFile(nextQuestion);
 
-			this.scorekeeper.setupQuestion(nextQuestion.getPoints());
-			this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, listener);
-			this.currentQuestionHandler.notifyStart(
-					this.numQuestionsAsked,
-					this.totalQuestionsToAsk,
-					config.getQuestionTimeSeconds(),
-					imageFile);
-			this.timer.replaceSchedule(() -> timeoutQuestion(), config.getQuestionTimeSeconds() * 1000);
+					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
+					this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, listener);
+					this.currentQuestionHandler.notifyStart(
+							this.numQuestionsAsked,
+							this.totalQuestionsToAsk,
+							config.getQuestionTimeSeconds(),
+							imageFile);
+					this.timer.replaceSchedule(() -> {
+						try {
+							timeoutQuestion();
+						} catch (IllegalStateException e) {
+							// Timeout call was a bit late, and the game must've ended.
+							// Hence this is ignorable.
+						}
+					},
+							config.getQuestionTimeSeconds(), TimeUnit.SECONDS);
+				} finally {
+					lock.unlock();
+				}
+			};
 		} else {
 			this.timer.cancel();
 
 			this.currentQuestionHandler = null;
 			this.state = TriviaSessionState.ENDED;
-			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
-					.scores(scorekeeper.getScores())
-					.build();
-			this.listener.onRoundEnd(roundEndEvent);
+
+			runnable = () -> {
+				RoundEndEvent roundEndEvent = RoundEndEvent.builder()
+						.scores(scorekeeper.getScores())
+						.build();
+				this.listener.onRoundEnd(roundEndEvent);
+			};
 		}
+
+		this.delayTimer.schedule(runnable, PRE_QUESTION_DELAY_SECONDS, TimeUnit.SECONDS);
 	}
 
 	/**
@@ -157,7 +170,7 @@ class TriviaSession {
 
 		lock.lock();
 		try {
-			if (this.state != TriviaSessionState.STARTED) {
+			if (this.state != TriviaSessionState.WAITING_FOR_ANSWER) {
 				return;
 			}
 
@@ -178,7 +191,7 @@ class TriviaSession {
 				this.listener.onAnswerCorrect(answerCorrectEvent);
 				this.currentQuestionHandler.notifyEnd(userMessage, awardedPoints, incorrectAttempts);
 
-				nextQuestionOrEnd();
+				loadNextQuestionOrEnd();
 			} else {
 				// This user participated, so add them to the scores map if they are not already
 				// there.
@@ -236,23 +249,23 @@ class TriviaSession {
 
 	private static enum TriviaSessionState {
 		/**
-		 * The initial state. May be transitioned into the {@code STARTING} state.
+		 * The initial state. May be transitioned into the {@code WAITING_FOR_ANSWER}
+		 * state.
 		 */
 		NOT_STARTED,
 
 		/**
-		 * The pause between NOT_STARTED and STARTED. This state allows users to prepare
-		 * and prevents a race condition from occurring where the "trivia play" command
-		 * would be treated as input. May be transitioned into the {@code STARTED}
-		 * state.
+		 * The state where questions are being asked and users should respond to them.
+		 * May be transitioned into the {@code LOADING_NEXT_QUESTION} or the
+		 * {@code ENDED} state.
 		 */
-		STARTING,
+		WAITING_FOR_ANSWER,
 
 		/**
-		 * The state where questions are being asked and users should respond to them.
-		 * May be transitioned into the {@code ENDED} state.
+		 * The pause between the ending of one question and the beginning of another.
+		 * May be transitioned into the {@code WAITING_FOR_ANSWER} state.
 		 */
-		STARTED,
+		LOADING_NEXT_QUESTION,
 
 		/**
 		 * The state where all questions have been asked and the trivia session has

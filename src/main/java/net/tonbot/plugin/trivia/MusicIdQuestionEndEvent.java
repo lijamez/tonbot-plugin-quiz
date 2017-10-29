@@ -24,7 +24,10 @@ class MusicIdQuestionEndEvent extends QuestionEndEvent {
 	 *            The user who answered correctly, if any. Nullable.
 	 */
 	@Builder
-	private MusicIdQuestionEndEvent(boolean timedOut, Win win, String canonicalAnswer) {
+	private MusicIdQuestionEndEvent(
+			boolean timedOut,
+			Win win,
+			String canonicalAnswer) {
 		super(timedOut, win);
 
 		this.canonicalAnswer = Preconditions.checkNotNull(canonicalAnswer, "canonicalAnswer must be non-null.");
