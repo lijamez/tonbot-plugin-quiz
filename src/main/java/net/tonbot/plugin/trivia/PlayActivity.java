@@ -159,7 +159,19 @@ class PlayActivity implements Activity {
 					EmbedBuilder eb = getQuestionEmbedBuilder(shortAnswerQuestionStartEvent);
 					ShortAnswerQuestionTemplate saQuestion = shortAnswerQuestionStartEvent.getShortAnswerQuestion();
 
-					eb.withTitle(saQuestion.getQuestion());
+					// If the question has newlines, put everything up to the first newline
+					// character in the embed's title.
+					// The rest does in the embed's description.
+					String question = saQuestion.getQuestion();
+					int newlineIndex = question.indexOf('\n');
+					if (newlineIndex >= 0) {
+						String mainQuestion = question.substring(0, newlineIndex);
+						String extra = question.substring(newlineIndex, question.length());
+						eb.withTitle(mainQuestion);
+						eb.withDescription(extra);
+					} else {
+						eb.withTitle(saQuestion.getQuestion());
+					}
 
 					sendQuestionEmbed(eb, shortAnswerQuestionStartEvent);
 				}
