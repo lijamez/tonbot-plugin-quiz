@@ -28,6 +28,7 @@ class Scorekeeper {
 		Preconditions.checkNotNull(points >= 0, "points must be non-negative.");
 
 		this.currentQuestionPoints = points;
+		this.attempts.clear();
 	}
 
 	/**
