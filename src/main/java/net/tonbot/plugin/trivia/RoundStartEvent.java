@@ -17,4 +17,7 @@ class RoundStartEvent {
 
 	@NonNull
 	private final Long startingInSeconds;
+
+	@NonNull
+	private final String difficultyName;
 }

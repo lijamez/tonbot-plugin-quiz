@@ -23,7 +23,7 @@ class TriviaSession {
 
 	private final QuietTriviaListener listener;
 	private final LoadedTrivia trivia;
-	private final List<QuestionTemplate> availableQuestions;
+	private final List<QuestionTemplate> availableQuestionTemplates;
 	private final TriviaConfiguration config;
 	private final Random random;
 	private final long totalQuestionsToAsk;
@@ -51,14 +51,14 @@ class TriviaSession {
 		this.config = Preconditions.checkNotNull(config, "config must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 
-		this.availableQuestions = new ArrayList<>(
+		this.availableQuestionTemplates = new ArrayList<>(
 				this.trivia.getTriviaPack().getQuestionBundle().getQuestionTemplates());
-		this.totalQuestionsToAsk = Math.min(config.getMaxQuestions(), availableQuestions.size());
+		this.totalQuestionsToAsk = Math.min(config.getMaxQuestions(), availableQuestionTemplates.size());
 
 		this.numQuestionsAsked = 0;
 		this.state = TriviaSessionState.NOT_STARTED;
 		this.currentQuestionHandler = null;
-		this.scorekeeper = new Scorekeeper();
+		this.scorekeeper = new Scorekeeper(config.getScoreDecayFactor());
 		this.delayTimer = Executors.newScheduledThreadPool(1);
 		this.timer = new TriviaQuestionTimer();
 		this.lock = new ReentrantLock();
@@ -74,6 +74,7 @@ class TriviaSession {
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(trivia.getTriviaPack().getMetadata())
 					.startingInSeconds(PRE_QUESTION_DELAY_SECONDS)
+					.difficultyName(config.getDifficultyName())
 					.build();
 
 			listener.onRoundStart(roundStartEvent);
@@ -115,14 +116,14 @@ class TriviaSession {
 				lock.lock();
 				try {
 					state = TriviaSessionState.WAITING_FOR_ANSWER;
-					QuestionTemplate nextQuestion = pickRandomElement(this.availableQuestions);
-					this.availableQuestions.remove(nextQuestion);
+					QuestionTemplate nextQuestion = pickRandomElement(this.availableQuestionTemplates);
+					this.availableQuestionTemplates.remove(nextQuestion);
 					this.numQuestionsAsked++;
 
 					File imageFile = getRandomImageFile(nextQuestion);
 
 					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
-					this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, listener);
+					this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, config, listener);
 					this.currentQuestionHandler.notifyStart(
 							this.numQuestionsAsked,
 							this.totalQuestionsToAsk,

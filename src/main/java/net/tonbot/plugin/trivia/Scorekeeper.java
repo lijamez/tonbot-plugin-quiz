@@ -10,12 +10,14 @@ class Scorekeeper {
 
 	private final Map<Long, Long> scores;
 	private final Map<Long, Long> attempts;
+	private final double scoreDecayFactor;
 
 	private Long currentQuestionPoints;
 
-	public Scorekeeper() {
+	public Scorekeeper(double scoreDecayFactor) {
 		this.scores = new HashMap<>();
 		this.attempts = new HashMap<>();
+		this.scoreDecayFactor = scoreDecayFactor;
 	}
 
 	/**
@@ -47,7 +49,8 @@ class Scorekeeper {
 		}
 
 		long previousIncorrectAnswers = this.attempts.getOrDefault(userId, 0L);
-		long actualAwardedPoints = (long) Math.ceil(currentQuestionPoints * Math.pow(0.5, previousIncorrectAnswers));
+		long actualAwardedPoints = (long) Math
+				.ceil(currentQuestionPoints * Math.pow(scoreDecayFactor, previousIncorrectAnswers));
 
 		long oldScore = this.scores.getOrDefault(userId, 0L);
 		this.scores.put(userId, oldScore + actualAwardedPoints);

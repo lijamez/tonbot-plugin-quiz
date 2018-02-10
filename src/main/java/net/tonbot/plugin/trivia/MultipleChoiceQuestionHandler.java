@@ -14,18 +14,17 @@ import net.tonbot.plugin.trivia.model.QuestionTemplate;
 
 class MultipleChoiceQuestionHandler implements QuestionHandler {
 
-	private static final int MAX_CHOICES = 5;
-
 	private final MultipleChoiceQuestionTemplate question;
 	private final TriviaListener listener;
 	private final List<Choice> choices;
 
 	public MultipleChoiceQuestionHandler(
 			MultipleChoiceQuestionTemplate question,
+			TriviaConfiguration config,
 			TriviaListener listener) {
 		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
-		this.choices = getChoices(this.question);
+		this.choices = getChoices(this.question, config.getMaxMultipleChoices());
 	}
 
 	@Override
@@ -53,10 +52,12 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 	 * 
 	 * @param question
 	 *            A {@link MultipleChoiceQuestionTemplate}.
+	 * @param maxChoices
+	 *            The maximum number of choices.
 	 * @return A list of choices, only 1 of which are correct.
 	 */
-	private List<Choice> getChoices(MultipleChoiceQuestionTemplate question) {
-		List<Choice> incorrectChoices = pickRandomSubset(question.getIncorrectChoices(), MAX_CHOICES - 1);
+	private List<Choice> getChoices(MultipleChoiceQuestionTemplate question, int maxChoices) {
+		List<Choice> incorrectChoices = pickRandomSubset(question.getIncorrectChoices(), maxChoices - 1);
 		List<Choice> correctChoices = pickRandomSubset(question.getCorrectChoices(), 1);
 
 		List<Choice> allChoices = new ArrayList<>();
