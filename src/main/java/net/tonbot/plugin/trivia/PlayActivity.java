@@ -337,7 +337,7 @@ class PlayActivity implements Activity {
 		if (tokenizer.hasNextWord()) {
 			String userInputDifficultyString = tokenizer.nextWord().getContent();
 			chosenDifficulty = Arrays.stream(Difficulty.values())
-					.filter(difficulty -> StringUtils.equals(userInputDifficultyString, difficulty.getFriendlyName()))
+					.filter(difficulty -> StringUtils.equalsIgnoreCase(userInputDifficultyString, difficulty.getFriendlyName()))
 					.findFirst()
 					.orElseThrow(() -> {
 						// User provided an invalid difficulty.
