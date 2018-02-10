@@ -49,6 +49,8 @@ class ListActivity implements Activity {
 					entry.getKey(),
 					entry.getValue().getTriviaPack().getMetadata().getDescription()));
 		}
+		
+		sb.append("\nUse the command ``trivia play`` command to play it.\n");
 
 		botUtils.sendMessage(event.getChannel(), sb.toString());
 	}

@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 
 import net.tonbot.common.Activity;
 import net.tonbot.common.ActivityDescriptor;
+import net.tonbot.common.ActivityUsageException;
 import net.tonbot.common.BotUtils;
 import net.tonbot.common.TonbotBusinessException;
 import net.tonbot.plugin.trivia.model.Choice;
@@ -37,7 +38,7 @@ class PlayActivity implements Activity {
 
 	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder()
 			.route("trivia play")
-			.parameters(ImmutableList.of("trivia name"))
+			.parameters(ImmutableList.of("trivia pack"))
 			.description("Starts a round in the current channel.")
 			.build();
 
@@ -69,7 +70,7 @@ class PlayActivity implements Activity {
 		String triviaPackName = args.trim();
 
 		if (StringUtils.isBlank(triviaPackName)) {
-			throw new TonbotBusinessException("You need to specify a trivia pack name.");
+			throw new ActivityUsageException("You need to specify a trivia pack name. Use the ``trivia list`` command to see the available trivia packs.");
 		}
 
 		try {
@@ -299,7 +300,7 @@ class PlayActivity implements Activity {
 
 			});
 		} catch (InvalidTriviaPackException e) {
-			throw new TonbotBusinessException("Invalid trivia pack name.");
+			throw new TonbotBusinessException("Invalid trivia pack name. Use the ``trivia list`` command to see the available trivia packs.");
 		}
 
 	}
