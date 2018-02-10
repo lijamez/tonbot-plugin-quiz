@@ -35,6 +35,7 @@ public class TriviaPlugin extends TonbotPlugin {
 		}));
 	}
 
+	@Override
 	public Set<Object> getRawEventListeners() {
 		return injector.getInstance(Key.get(new TypeLiteral<Set<Object>>() {
 		}));
