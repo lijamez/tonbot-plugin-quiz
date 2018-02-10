@@ -22,6 +22,11 @@ class DiscordMessageEventListener {
 	@EventSubscriber
 	public void onMessageReceived(MessageReceivedEvent messageReceivedEvent) {
 
+		// Ignore bots
+		if (messageReceivedEvent.getAuthor().isBot()) {
+			return;
+		}
+
 		TriviaSessionKey sessionKey = new TriviaSessionKey(
 				messageReceivedEvent.getGuild().getLongID(),
 				messageReceivedEvent.getChannel().getLongID());
