@@ -41,7 +41,7 @@ class PlayActivity implements Activity {
 
 	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder()
 			.route("trivia play")
-			.parameters(ImmutableList.of("trivia pack", "difficulty"))
+			.parameters(ImmutableList.of("<trivia pack>", "[difficulty]"))
 			.description("Starts a round in the current channel.")
 			.build();
 
