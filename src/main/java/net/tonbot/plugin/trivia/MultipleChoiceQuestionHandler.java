@@ -105,7 +105,7 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 	public Optional<Boolean> checkCorrectness(UserMessage userMessage) {
 		Preconditions.checkNotNull(userMessage, "userMessage must be non-null.");
 
-		String msg = userMessage.getMessage();
+		String msg = userMessage.getMessage().trim();
 		try {
 			int selectionNumber = Integer.parseInt(msg);
 
