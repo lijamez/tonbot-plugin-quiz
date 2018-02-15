@@ -22,12 +22,11 @@ repositories {
 dependencies {
     implementation group: 'com.github.lijamez', name: 'tonbot-common', version: 'master-SNAPSHOT'
 
-	implementation group: 'com.sedmelluq', name: 'lavaplayer', version: '1.2.44'
 	implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
-	implementation group: 'commons-io', name: 'commons-io', version: '2.5'
+	implementation group: 'commons-io', name: 'commons-io', version: '2.6'
 	
 	implementation group: 'com.google.inject', name: 'guice', version: '4.1.0'
-	implementation group: 'com.google.guava', name: 'guava', version: '23.0'
+	implementation group: 'com.google.guava', name: 'guava', version: '24.0-jre'
 	implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 	
 	compileOnly 'org.projectlombok:lombok:1.16.20'
