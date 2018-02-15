@@ -33,13 +33,8 @@ class MultipleChoiceQuestionStartEvent extends QuestionStartEvent {
 	 *            Image file. Nullable.
 	 */
 	@Builder
-	private MultipleChoiceQuestionStartEvent(
-			MultipleChoiceQuestionTemplate mcQuestion,
-			long questionNumber,
-			long totalQuestions,
-			long maxDurationSeconds,
-			List<Choice> choices,
-			File imageFile) {
+	private MultipleChoiceQuestionStartEvent(MultipleChoiceQuestionTemplate mcQuestion, long questionNumber,
+			long totalQuestions, long maxDurationSeconds, List<Choice> choices, File imageFile) {
 		super(mcQuestion, questionNumber, totalQuestions, maxDurationSeconds, imageFile);
 
 		Preconditions.checkNotNull(choices, "choices must be non-null.");

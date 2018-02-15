@@ -17,8 +17,7 @@ class DiscordMessageEventListener {
 	private final TriviaSessionManager triviaSessionManager;
 
 	@Inject
-	public DiscordMessageEventListener(
-			TriviaSessionManager triviaSessionManager) {
+	public DiscordMessageEventListener(TriviaSessionManager triviaSessionManager) {
 		this.triviaSessionManager = Preconditions.checkNotNull(triviaSessionManager,
 				"triviaSessionManager must be non-null.");
 	}
@@ -31,8 +30,7 @@ class DiscordMessageEventListener {
 			return;
 		}
 
-		TriviaSessionKey sessionKey = new TriviaSessionKey(
-				messageReceivedEvent.getGuild().getLongID(),
+		TriviaSessionKey sessionKey = new TriviaSessionKey(messageReceivedEvent.getGuild().getLongID(),
 				messageReceivedEvent.getChannel().getLongID());
 
 		Optional<TriviaSession> optSession = triviaSessionManager.getSession(sessionKey);
@@ -49,17 +47,13 @@ class DiscordMessageEventListener {
 			return;
 		}
 
-		UserMessage userMessage = UserMessage.builder()
-				.message(normalizedMessageContent)
-				.messageId(message.getLongID())
-				.userId(messageReceivedEvent.getAuthor().getLongID())
-				.build();
+		UserMessage userMessage = UserMessage.builder().message(normalizedMessageContent).messageId(message.getLongID())
+				.userId(messageReceivedEvent.getAuthor().getLongID()).build();
 		session.takeInput(userMessage);
 	}
 
 	private String normalize(String message) {
-		return MessageNormalizer.removeEmojis(message)
-				.trim();
+		return MessageNormalizer.removeEmojis(message).trim();
 
 	}
 }

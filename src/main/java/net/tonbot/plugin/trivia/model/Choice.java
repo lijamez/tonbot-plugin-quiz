@@ -19,9 +19,7 @@ public class Choice {
 
 	@Builder
 	@JsonCreator
-	public Choice(
-			@JsonProperty("value") String value,
-			@JsonProperty("isCorrect") boolean isCorrect) {
+	public Choice(@JsonProperty("value") String value, @JsonProperty("isCorrect") boolean isCorrect) {
 		Preconditions.checkArgument(!StringUtils.isBlank(value), "value must not be blank.");
 		this.value = value;
 		this.isCorrect = isCorrect;

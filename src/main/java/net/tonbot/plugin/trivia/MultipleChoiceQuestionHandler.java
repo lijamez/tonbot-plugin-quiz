@@ -18,9 +18,7 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 	private final TriviaListener listener;
 	private final List<Choice> choices;
 
-	public MultipleChoiceQuestionHandler(
-			MultipleChoiceQuestionTemplate question,
-			TriviaConfiguration config,
+	public MultipleChoiceQuestionHandler(MultipleChoiceQuestionTemplate question, TriviaConfiguration config,
 			TriviaListener listener) {
 		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
@@ -36,13 +34,8 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds, File imageFile) {
 
 		MultipleChoiceQuestionStartEvent startEvent = MultipleChoiceQuestionStartEvent.builder()
-				.questionNumber(questionNumber)
-				.totalQuestions(totalQuestions)
-				.maxDurationSeconds(maxDurationSeconds)
-				.imageFile(imageFile)
-				.mcQuestion(question)
-				.choices(choices)
-				.build();
+				.questionNumber(questionNumber).totalQuestions(totalQuestions).maxDurationSeconds(maxDurationSeconds)
+				.imageFile(imageFile).mcQuestion(question).choices(choices).build();
 
 		listener.onMultipleChoiceQuestionStart(startEvent);
 	}
@@ -81,21 +74,15 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 
 	@Override
 	public void notifyEnd(UserMessage userMessage, long pointsAwarded, long incorrectAttempts) {
-		Choice correctChoice = this.choices.stream()
-				.filter(c -> c.isCorrect())
-				.findFirst()
+		Choice correctChoice = this.choices.stream().filter(c -> c.isCorrect()).findFirst()
 				.orElseThrow(() -> new IllegalStateException("No correct choice found."));
 
-		MultipleChoiceQuestionEndEvent endEvent = MultipleChoiceQuestionEndEvent.builder()
-				.correctChoice(correctChoice)
-				.timedOut(userMessage == null)
-				.win(userMessage != null
-						? Win.builder()
-								.pointsAwarded(pointsAwarded)
-								.incorrectAttempts(incorrectAttempts)
-								.winningMessage(userMessage)
-								.build()
-						: null)
+		MultipleChoiceQuestionEndEvent endEvent = MultipleChoiceQuestionEndEvent.builder().correctChoice(correctChoice)
+				.timedOut(userMessage == null).win(
+						userMessage != null
+								? Win.builder().pointsAwarded(pointsAwarded).incorrectAttempts(incorrectAttempts)
+										.winningMessage(userMessage).build()
+								: null)
 				.build();
 
 		listener.onMultipleChoiceQuestionEnd(endEvent);

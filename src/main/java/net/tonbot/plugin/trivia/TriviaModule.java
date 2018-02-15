@@ -25,11 +25,7 @@ class TriviaModule extends AbstractModule {
 	private final Color color;
 	private final File triviaPacksDir;
 
-	public TriviaModule(
-			IDiscordClient discordClient,
-			BotUtils botUtils,
-			Color color,
-			File triviaPacksDir) {
+	public TriviaModule(IDiscordClient discordClient, BotUtils botUtils, Color color, File triviaPacksDir) {
 		this.discordClient = Preconditions.checkNotNull(discordClient, "discordClient must be non-null.");
 		this.botUtils = Preconditions.checkNotNull(botUtils, "botUtils must be non-null.");
 		this.color = Preconditions.checkNotNull(color, "color must be non-null.");

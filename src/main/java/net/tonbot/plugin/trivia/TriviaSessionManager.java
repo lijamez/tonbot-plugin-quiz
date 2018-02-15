@@ -17,9 +17,7 @@ class TriviaSessionManager {
 	private final ConcurrentHashMap<TriviaSessionKey, TriviaSession> sessions;
 
 	@Inject
-	public TriviaSessionManager(
-			TriviaLibrary triviaLibrary,
-			Random random) {
+	public TriviaSessionManager(TriviaLibrary triviaLibrary, Random random) {
 		this.triviaLibrary = Preconditions.checkNotNull(triviaLibrary, "triviaLibrary must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 
@@ -46,10 +44,7 @@ class TriviaSessionManager {
 	 * @throws InvalidTriviaPackException
 	 *             if the specified trivia pack is not valid.
 	 */
-	public TriviaSession createSession(
-			TriviaSessionKey sessionKey,
-			String triviaPackName,
-			Difficulty difficulty,
+	public TriviaSession createSession(TriviaSessionKey sessionKey, String triviaPackName, Difficulty difficulty,
 			TriviaListener listener) {
 		Preconditions.checkNotNull(sessionKey, "sessionKey must be non-null.");
 		Preconditions.checkNotNull(triviaPackName, "triviaPackName must be non-null.");
@@ -74,29 +69,14 @@ class TriviaSessionManager {
 		TriviaConfiguration tc;
 
 		if (difficulty == Difficulty.EASY) {
-			tc = TriviaConfiguration.builder()
-					.maxQuestions(MAX_QUESTIONS)
-					.questionTimeSeconds(30)
-					.scoreDecayFactor(0.75)
-					.maxMultipleChoices(4)
-					.difficultyName(difficulty.getFriendlyName())
-					.build();
+			tc = TriviaConfiguration.builder().maxQuestions(MAX_QUESTIONS).questionTimeSeconds(30)
+					.scoreDecayFactor(0.75).maxMultipleChoices(4).difficultyName(difficulty.getFriendlyName()).build();
 		} else if (difficulty == Difficulty.MEDIUM) {
-			tc = TriviaConfiguration.builder()
-					.maxQuestions(MAX_QUESTIONS)
-					.questionTimeSeconds(30)
-					.scoreDecayFactor(0.5)
-					.maxMultipleChoices(5)
-					.difficultyName(difficulty.getFriendlyName())
-					.build();
+			tc = TriviaConfiguration.builder().maxQuestions(MAX_QUESTIONS).questionTimeSeconds(30).scoreDecayFactor(0.5)
+					.maxMultipleChoices(5).difficultyName(difficulty.getFriendlyName()).build();
 		} else if (difficulty == Difficulty.HARD) {
-			tc = TriviaConfiguration.builder()
-					.maxQuestions(MAX_QUESTIONS)
-					.questionTimeSeconds(20)
-					.scoreDecayFactor(0.25)
-					.maxMultipleChoices(8)
-					.difficultyName(difficulty.getFriendlyName())
-					.build();
+			tc = TriviaConfiguration.builder().maxQuestions(MAX_QUESTIONS).questionTimeSeconds(20)
+					.scoreDecayFactor(0.25).maxMultipleChoices(8).difficultyName(difficulty.getFriendlyName()).build();
 		} else {
 			throw new IllegalArgumentException(
 					"Can't generate TriviaConfiguration for unknown difficulty " + difficulty);

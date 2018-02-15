@@ -2,9 +2,7 @@ package net.tonbot.plugin.trivia;
 
 enum Difficulty {
 
-	EASY("Easy"),
-	MEDIUM("Medium"),
-	HARD("Hard");
+	EASY("Easy"), MEDIUM("Medium"), HARD("Hard");
 
 	private final String friendlyName;
 

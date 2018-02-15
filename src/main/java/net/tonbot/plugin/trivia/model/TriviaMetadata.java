@@ -18,9 +18,7 @@ public class TriviaMetadata {
 
 	@Builder
 	@JsonCreator
-	public TriviaMetadata(
-			@JsonProperty("name") String name,
-			@JsonProperty("version") String version,
+	public TriviaMetadata(@JsonProperty("name") String name, @JsonProperty("version") String version,
 			@JsonProperty("description") String description) {
 		Preconditions.checkArgument(!StringUtils.isBlank(name), "name must not be blank.");
 		Preconditions.checkArgument(!StringUtils.isBlank(version), "version must not be blank.");

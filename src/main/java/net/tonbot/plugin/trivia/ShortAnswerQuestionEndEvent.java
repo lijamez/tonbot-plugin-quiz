@@ -22,10 +22,7 @@ class ShortAnswerQuestionEndEvent extends QuestionEndEvent {
 	 *            An acceptable answer. Non-null.
 	 */
 	@Builder
-	public ShortAnswerQuestionEndEvent(
-			boolean timedOut,
-			Win win,
-			String acceptableAnswer) {
+	public ShortAnswerQuestionEndEvent(boolean timedOut, Win win, String acceptableAnswer) {
 		super(timedOut, win);
 
 		this.acceptableAnswer = Preconditions.checkNotNull(acceptableAnswer, "acceptableAnswer must be non-null.");

@@ -29,10 +29,7 @@ class TriviaLibrary {
 	private Map<String, LoadedTrivia> loadedTrivia;
 
 	@Inject
-	public TriviaLibrary(
-			File triviaPacksDir,
-			ObjectMapper objectMapper,
-			TriviaPackSanityChecker sanityChecker) {
+	public TriviaLibrary(File triviaPacksDir, ObjectMapper objectMapper, TriviaPackSanityChecker sanityChecker) {
 		this.triviaPacksDir = Preconditions.checkNotNull(triviaPacksDir, "triviaPacksDir must be non-null.");
 		this.objectMapper = Preconditions.checkNotNull(objectMapper, "objectMapper must be non-null.");
 		this.sanityChecker = Preconditions.checkNotNull(sanityChecker, "sanityChecker must be non-null.");
@@ -46,10 +43,7 @@ class TriviaLibrary {
 		for (File dir : dirs) {
 			try {
 				TriviaPack triviaPack = readTriviaPackFromDir(dir);
-				LoadedTrivia loadedTrivia = LoadedTrivia.builder()
-						.triviaPack(triviaPack)
-						.triviaPackDir(dir)
-						.build();
+				LoadedTrivia loadedTrivia = LoadedTrivia.builder().triviaPack(triviaPack).triviaPackDir(dir).build();
 				this.loadedTrivia.put(dir.getName(), loadedTrivia);
 			} catch (CorruptTriviaPackException e) {
 				LOG.warn("Trivia pack at {} is corrupt.", dir.getAbsolutePath(), e);
@@ -92,10 +86,7 @@ class TriviaLibrary {
 			TriviaMetadata metadata = objectMapper.readValue(metadataFile, TriviaMetadata.class);
 			QuestionTemplateBundle questionBundle = objectMapper.readValue(questionsFile, QuestionTemplateBundle.class);
 
-			TriviaPack triviaPack = TriviaPack.builder()
-					.metadata(metadata)
-					.questionBundle(questionBundle)
-					.build();
+			TriviaPack triviaPack = TriviaPack.builder().metadata(metadata).questionBundle(questionBundle).build();
 
 			sanityChecker.check(triviaPack, triviaPackDir);
 

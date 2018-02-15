@@ -17,8 +17,7 @@ public class QuestionTemplateBundle {
 
 	@Builder
 	@JsonCreator
-	public QuestionTemplateBundle(
-			@JsonProperty("questions") List<QuestionTemplate> questionTemplates) {
+	public QuestionTemplateBundle(@JsonProperty("questions") List<QuestionTemplate> questionTemplates) {
 		Preconditions.checkNotNull(questionTemplates, "questionTemplates must be non-null.");
 		this.questionTemplates = ImmutableList.copyOf(questionTemplates);
 	}

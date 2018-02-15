@@ -24,12 +24,8 @@ class ShortAnswerQuestionStartEvent extends QuestionStartEvent {
 	 *            Image file. Nullable.
 	 */
 	@Builder
-	public ShortAnswerQuestionStartEvent(
-			ShortAnswerQuestionTemplate saQuestion,
-			long questionNumber,
-			long totalQuestions,
-			long maxDurationSeconds,
-			File imageFile) {
+	public ShortAnswerQuestionStartEvent(ShortAnswerQuestionTemplate saQuestion, long questionNumber,
+			long totalQuestions, long maxDurationSeconds, File imageFile) {
 		super(saQuestion, questionNumber, totalQuestions, maxDurationSeconds, imageFile);
 	}
 

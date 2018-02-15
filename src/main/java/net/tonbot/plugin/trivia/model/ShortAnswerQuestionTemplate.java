@@ -23,10 +23,8 @@ public class ShortAnswerQuestionTemplate extends QuestionTemplate {
 
 	@Builder
 	@JsonCreator
-	public ShortAnswerQuestionTemplate(
-			@JsonProperty("points") long points,
-			@JsonProperty("images") List<String> imagePaths,
-			@JsonProperty("question") String question,
+	public ShortAnswerQuestionTemplate(@JsonProperty("points") long points,
+			@JsonProperty("images") List<String> imagePaths, @JsonProperty("question") String question,
 			@JsonProperty("answers") List<String> answers) {
 		super(points, imagePaths);
 

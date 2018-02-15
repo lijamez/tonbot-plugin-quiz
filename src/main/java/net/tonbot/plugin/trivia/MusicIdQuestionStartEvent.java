@@ -34,14 +34,8 @@ class MusicIdQuestionStartEvent extends QuestionStartEvent {
 	 *            A property of the track to ask for. Non-null.
 	 */
 	@Builder
-	private MusicIdQuestionStartEvent(
-			MusicIdentificationQuestionTemplate miQuestion,
-			long questionNumber,
-			long totalQuestions,
-			long maxDurationSeconds,
-			File imageFile,
-			File track,
-			TrackProperty trackProperty) {
+	private MusicIdQuestionStartEvent(MusicIdentificationQuestionTemplate miQuestion, long questionNumber,
+			long totalQuestions, long maxDurationSeconds, File imageFile, File track, TrackProperty trackProperty) {
 		super(miQuestion, questionNumber, totalQuestions, maxDurationSeconds, imageFile);
 
 		this.track = Preconditions.checkNotNull(track, "track must be non-null.");

@@ -23,10 +23,8 @@ public class MusicIdentificationQuestionTemplate extends QuestionTemplate {
 
 	@Builder
 	@JsonCreator
-	public MusicIdentificationQuestionTemplate(
-			@JsonProperty("points") long points,
-			@JsonProperty("images") List<String> imagePaths,
-			@JsonProperty("track_path") String trackPath,
+	public MusicIdentificationQuestionTemplate(@JsonProperty("points") long points,
+			@JsonProperty("images") List<String> imagePaths, @JsonProperty("track_path") String trackPath,
 			@JsonProperty("ask_for") List<TrackProperty> askFor) {
 		super(points, imagePaths);
 

@@ -12,8 +12,7 @@ import lombok.Data;
 
 @Data
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({
-		@Type(value = ShortAnswerQuestionTemplate.class, name = "short_answer"),
+@JsonSubTypes({ @Type(value = ShortAnswerQuestionTemplate.class, name = "short_answer"),
 		@Type(value = MultipleChoiceQuestionTemplate.class, name = "multiple_choice"),
 		@Type(value = MusicIdentificationQuestionTemplate.class, name = "music_identification") })
 public abstract class QuestionTemplate {

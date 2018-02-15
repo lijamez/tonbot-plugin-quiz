@@ -39,11 +39,7 @@ class TriviaSession {
 	private TriviaQuestionTimer timer;
 	private ReentrantLock lock;
 
-	public TriviaSession(
-			TriviaListener listener,
-			LoadedTrivia trivia,
-			TriviaConfiguration config,
-			Random random) {
+	public TriviaSession(TriviaListener listener, LoadedTrivia trivia, TriviaConfiguration config, Random random) {
 
 		Preconditions.checkNotNull(listener, "listener must be non-null.");
 		this.listener = new QuietTriviaListener(listener);
@@ -67,15 +63,12 @@ class TriviaSession {
 	public void start() {
 		lock.lock();
 		try {
-			Preconditions.checkState(
-					this.state == TriviaSessionState.NOT_STARTED,
+			Preconditions.checkState(this.state == TriviaSessionState.NOT_STARTED,
 					"The session has already started or has already ended.");
 
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
-					.triviaMetadata(trivia.getTriviaPack().getMetadata())
-					.startingInSeconds(PRE_QUESTION_DELAY_SECONDS)
-					.difficultyName(config.getDifficultyName())
-					.build();
+					.triviaMetadata(trivia.getTriviaPack().getMetadata()).startingInSeconds(PRE_QUESTION_DELAY_SECONDS)
+					.difficultyName(config.getDifficultyName()).build();
 
 			listener.onRoundStart(roundStartEvent);
 
@@ -93,8 +86,7 @@ class TriviaSession {
 	private void timeoutQuestion() {
 		lock.lock();
 		try {
-			Preconditions.checkState(
-					this.state == TriviaSessionState.WAITING_FOR_ANSWER,
+			Preconditions.checkState(this.state == TriviaSessionState.WAITING_FOR_ANSWER,
 					"The session has not yet started or has already ended.");
 
 			if (currentQuestionHandler != null) {
@@ -124,11 +116,8 @@ class TriviaSession {
 
 					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
 					this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, config, listener);
-					this.currentQuestionHandler.notifyStart(
-							this.numQuestionsAsked,
-							this.totalQuestionsToAsk,
-							config.getQuestionTimeSeconds(),
-							imageFile);
+					this.currentQuestionHandler.notifyStart(this.numQuestionsAsked, this.totalQuestionsToAsk,
+							config.getQuestionTimeSeconds(), imageFile);
 					this.timer.replaceSchedule(() -> {
 						try {
 							timeoutQuestion();
@@ -136,8 +125,7 @@ class TriviaSession {
 							// Timeout call was a bit late, and the game must've ended.
 							// Hence this is ignorable.
 						}
-					},
-							config.getQuestionTimeSeconds(), TimeUnit.SECONDS);
+					}, config.getQuestionTimeSeconds(), TimeUnit.SECONDS);
 				} finally {
 					lock.unlock();
 				}
@@ -149,9 +137,7 @@ class TriviaSession {
 			this.state = TriviaSessionState.ENDED;
 
 			runnable = () -> {
-				RoundEndEvent roundEndEvent = RoundEndEvent.builder()
-						.scores(scorekeeper.getScores())
-						.build();
+				RoundEndEvent roundEndEvent = RoundEndEvent.builder().scores(scorekeeper.getScores()).build();
 				this.listener.onRoundEnd(roundEndEvent);
 			};
 		}
@@ -187,8 +173,7 @@ class TriviaSession {
 				long awardedPoints = this.scorekeeper.logCorrectAnswerAndAdvance(userMessage.getUserId());
 
 				AnswerCorrectEvent answerCorrectEvent = AnswerCorrectEvent.builder()
-						.messageId(userMessage.getMessageId())
-						.build();
+						.messageId(userMessage.getMessageId()).build();
 				this.listener.onAnswerCorrect(answerCorrectEvent);
 				this.currentQuestionHandler.notifyEnd(userMessage, awardedPoints, incorrectAttempts);
 
@@ -198,8 +183,7 @@ class TriviaSession {
 				// there.
 				this.scorekeeper.logIncorrectAnswer(userMessage.getUserId());
 
-				AnswerIncorrectEvent event = AnswerIncorrectEvent.builder()
-						.messageId(userMessage.getMessageId())
+				AnswerIncorrectEvent event = AnswerIncorrectEvent.builder().messageId(userMessage.getMessageId())
 						.build();
 				listener.onAnswerIncorrect(event);
 			}
@@ -222,9 +206,7 @@ class TriviaSession {
 
 			this.timer.cancel();
 			this.state = TriviaSessionState.ENDED;
-			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
-					.scores(this.scorekeeper.getScores())
-					.build();
+			RoundEndEvent roundEndEvent = RoundEndEvent.builder().scores(this.scorekeeper.getScores()).build();
 			listener.onRoundEnd(roundEndEvent);
 		} finally {
 			lock.unlock();

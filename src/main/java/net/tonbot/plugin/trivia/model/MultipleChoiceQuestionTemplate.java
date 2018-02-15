@@ -24,10 +24,8 @@ public class MultipleChoiceQuestionTemplate extends QuestionTemplate {
 
 	@Builder
 	@JsonCreator
-	public MultipleChoiceQuestionTemplate(
-			@JsonProperty("points") long points,
-			@JsonProperty("images") List<String> imagePaths,
-			@JsonProperty("question") String question,
+	public MultipleChoiceQuestionTemplate(@JsonProperty("points") long points,
+			@JsonProperty("images") List<String> imagePaths, @JsonProperty("question") String question,
 			@JsonProperty("choices") List<Choice> choices) {
 		super(points, imagePaths);
 
@@ -36,13 +34,9 @@ public class MultipleChoiceQuestionTemplate extends QuestionTemplate {
 
 		Preconditions.checkArgument(!CollectionUtils.isEmpty(choices), "choices must not be empty.");
 
-		this.correctChoices = choices.stream()
-				.filter(c -> c.isCorrect())
-				.collect(ImmutableList.toImmutableList());
+		this.correctChoices = choices.stream().filter(c -> c.isCorrect()).collect(ImmutableList.toImmutableList());
 
-		this.incorrectChoices = choices.stream()
-				.filter(c -> !c.isCorrect())
-				.collect(ImmutableList.toImmutableList());
+		this.incorrectChoices = choices.stream().filter(c -> !c.isCorrect()).collect(ImmutableList.toImmutableList());
 
 		Preconditions.checkArgument(!correctChoices.isEmpty() && !incorrectChoices.isEmpty(),
 				"choices must contain at least one correct choice and at least one incorrect choice.");

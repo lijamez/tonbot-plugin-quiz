@@ -20,12 +20,8 @@ abstract class QuestionStartEvent {
 
 	private final File image;
 
-	public QuestionStartEvent(
-			QuestionTemplate question,
-			long questionNumber,
-			long totalQuestions,
-			long maxDurationSeconds,
-			File image) {
+	public QuestionStartEvent(QuestionTemplate question, long questionNumber, long totalQuestions,
+			long maxDurationSeconds, File image) {
 		Preconditions.checkArgument(questionNumber > 0, "questionNumber must be positive.");
 		Preconditions.checkArgument(totalQuestions > 0, "totalQuestions must be positive.");
 		Preconditions.checkArgument(maxDurationSeconds > 0, "maxDurationSeconds must be positive.");
