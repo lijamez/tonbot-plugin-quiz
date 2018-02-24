@@ -23,13 +23,13 @@ class TriviaModule extends AbstractModule {
 	private final IDiscordClient discordClient;
 	private final BotUtils botUtils;
 	private final Color color;
-	private final File triviaPacksDir;
+	private final File triviaTopicsDir;
 
-	public TriviaModule(IDiscordClient discordClient, BotUtils botUtils, Color color, File triviaPacksDir) {
+	public TriviaModule(IDiscordClient discordClient, BotUtils botUtils, Color color, File triviaTopicsDir) {
 		this.discordClient = Preconditions.checkNotNull(discordClient, "discordClient must be non-null.");
 		this.botUtils = Preconditions.checkNotNull(botUtils, "botUtils must be non-null.");
 		this.color = Preconditions.checkNotNull(color, "color must be non-null.");
-		this.triviaPacksDir = Preconditions.checkNotNull(triviaPacksDir, "triviaPacksDir must be non-null.");
+		this.triviaTopicsDir = Preconditions.checkNotNull(triviaTopicsDir, "triviaTopicsDir must be non-null.");
 	}
 
 	@Override
@@ -37,13 +37,13 @@ class TriviaModule extends AbstractModule {
 		bind(IDiscordClient.class).toInstance(discordClient);
 		bind(TriviaSessionManager.class).in(Scopes.SINGLETON);
 		bind(BotUtils.class).toInstance(this.botUtils);
-		bind(File.class).toInstance(triviaPacksDir);
+		bind(File.class).toInstance(triviaTopicsDir);
 		bind(Color.class).toInstance(color);
 	}
 
 	@Provides
 	@Singleton
-	Set<Activity> activities(PlayActivity playActivity, ListActivity listActivity) {
+	Set<Activity> activities(PlayActivity playActivity, TopicsActivity listActivity) {
 		return ImmutableSet.of(playActivity, listActivity);
 	}
 

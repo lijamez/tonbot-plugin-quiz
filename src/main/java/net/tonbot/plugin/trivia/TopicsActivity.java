@@ -12,17 +12,18 @@ import net.tonbot.common.ActivityDescriptor;
 import net.tonbot.common.BotUtils;
 import net.tonbot.common.Enactable;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
+import sx.blah.discord.util.EmbedBuilder;
 
-class ListActivity implements Activity {
+class TopicsActivity implements Activity {
 
-	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder().route("trivia list")
-			.parameters(ImmutableList.of()).description("Displays a list of trivia packs.").build();
+	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder().route("trivia topics")
+			.parameters(ImmutableList.of()).description("Displays a list of trivia topics.").build();
 
 	private final TriviaLibrary triviaLibrary;
 	private final BotUtils botUtils;
 
 	@Inject
-	public ListActivity(TriviaLibrary triviaLibrary, BotUtils botUtils) {
+	public TopicsActivity(TriviaLibrary triviaLibrary, BotUtils botUtils) {
 		this.triviaLibrary = Preconditions.checkNotNull(triviaLibrary, "triviaLibrary must be non-null.");
 		this.botUtils = Preconditions.checkNotNull(botUtils, "botUtils must be non-null.");
 	}
@@ -37,17 +38,16 @@ class ListActivity implements Activity {
 
 		Map<String, LoadedTrivia> triviaMap = triviaLibrary.getTrivia();
 
-		StringBuilder sb = new StringBuilder();
-		sb.append("**Trivia Packs:**\n\n");
+		EmbedBuilder eb = new EmbedBuilder();
+		eb.withTitle("Trivia Topics");
 
 		for (Entry<String, LoadedTrivia> entry : triviaMap.entrySet()) {
-			sb.append(String.format("``%s``: %s\n", entry.getKey(),
-					entry.getValue().getTriviaPack().getMetadata().getDescription()));
+			eb.appendField(entry.getKey(), entry.getValue().getTriviaTopic().getMetadata().getDescription(), false);
 		}
 
-		sb.append("\nUse the command ``trivia play`` command to play it.\n");
+		eb.withFooterText("Use the command ``trivia play`` command to play them.");
 
-		botUtils.sendMessage(event.getChannel(), sb.toString());
+		botUtils.sendEmbed(event.getChannel(), eb.build());
 	}
 
 }

@@ -5,15 +5,15 @@ import java.io.File;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
-import net.tonbot.plugin.trivia.model.TriviaPack;
+import net.tonbot.plugin.trivia.model.TriviaTopic;
 
 @Data
 @Builder
 class LoadedTrivia {
 
 	@NonNull
-	private final File triviaPackDir;
+	private final File triviaTopicDir;
 
 	@NonNull
-	private final TriviaPack triviaPack;
+	private final TriviaTopic triviaTopic;
 }

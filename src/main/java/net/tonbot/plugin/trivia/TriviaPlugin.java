@@ -19,11 +19,11 @@ public class TriviaPlugin extends TonbotPlugin {
 	public TriviaPlugin(TonbotPluginArgs pluginArgs) {
 		super(pluginArgs);
 
-		File triviaPacksDir = pluginArgs.getPluginDataDir();
-		triviaPacksDir.mkdirs();
+		File triviaTopicsDir = pluginArgs.getPluginDataDir();
+		triviaTopicsDir.mkdirs();
 
 		this.injector = Guice.createInjector(new TriviaModule(pluginArgs.getDiscordClient(), pluginArgs.getBotUtils(),
-				pluginArgs.getColor(), triviaPacksDir));
+				pluginArgs.getColor(), triviaTopicsDir));
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class TriviaPlugin extends TonbotPlugin {
 
 	@Override
 	public String getFriendlyName() {
-		return "Quiz";
+		return "Trivia";
 	}
 
 }

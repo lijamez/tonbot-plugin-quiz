@@ -20,7 +20,7 @@ class TriviaMetadataTest extends Specification {
 		given: 
 		String serialized = '''
         {
-			"name" : "Test Trivia Pack",
+			"name" : "Test Trivia Topic",
             "version" : "0.1",
 			"description" : "For Unit Testing"
         }
@@ -28,7 +28,7 @@ class TriviaMetadataTest extends Specification {
 		
 		and:
 		TriviaMetadata expectedMetadata = TriviaMetadata.builder()
-			.name("Test Trivia Pack")
+			.name("Test Trivia Topic")
 			.version("0.1")
 			.description("For Unit Testing")
 			.build()
@@ -61,7 +61,7 @@ class TriviaMetadataTest extends Specification {
 		given: 
 		String serialized = '''
         {
-			"name" : "Test Trivia Pack",
+			"name" : "Test Trivia Topic",
             "version" : "",
 			"description" : "For Unit Testing"
         }
@@ -78,7 +78,7 @@ class TriviaMetadataTest extends Specification {
 		given:
 		String serialized = '''
         {
-			"name" : "Test Trivia Pack",
+			"name" : "Test Trivia Topic",
             "version" : "0.1",
 			"description" : ""
         }

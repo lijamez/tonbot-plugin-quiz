@@ -16,21 +16,21 @@ import com.google.inject.Inject;
 
 import net.tonbot.plugin.trivia.model.QuestionTemplateBundle;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
-import net.tonbot.plugin.trivia.model.TriviaPack;
+import net.tonbot.plugin.trivia.model.TriviaTopic;
 
 class TriviaLibrary {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TriviaLibrary.class);
 
-	private final File triviaPacksDir;
+	private final File triviaTopicsDir;
 	private final ObjectMapper objectMapper;
-	private final TriviaPackSanityChecker sanityChecker;
+	private final TriviaTopicSanityChecker sanityChecker;
 
 	private Map<String, LoadedTrivia> loadedTrivia;
 
 	@Inject
-	public TriviaLibrary(File triviaPacksDir, ObjectMapper objectMapper, TriviaPackSanityChecker sanityChecker) {
-		this.triviaPacksDir = Preconditions.checkNotNull(triviaPacksDir, "triviaPacksDir must be non-null.");
+	public TriviaLibrary(File triviaTopicsDir, ObjectMapper objectMapper, TriviaTopicSanityChecker sanityChecker) {
+		this.triviaTopicsDir = Preconditions.checkNotNull(triviaTopicsDir, "triviaTopicsDir must be non-null.");
 		this.objectMapper = Preconditions.checkNotNull(objectMapper, "objectMapper must be non-null.");
 		this.sanityChecker = Preconditions.checkNotNull(sanityChecker, "sanityChecker must be non-null.");
 		this.loadedTrivia = new HashMap<>();
@@ -39,63 +39,66 @@ class TriviaLibrary {
 	}
 
 	private void scan() {
-		File[] dirs = triviaPacksDir.listFiles(f -> f.isDirectory());
+		File[] dirs = triviaTopicsDir.listFiles(f -> f.isDirectory());
 		for (File dir : dirs) {
 			try {
-				TriviaPack triviaPack = readTriviaPackFromDir(dir);
-				LoadedTrivia loadedTrivia = LoadedTrivia.builder().triviaPack(triviaPack).triviaPackDir(dir).build();
+				TriviaTopic triviaTopic = readTriviaTopicFromDir(dir);
+				LoadedTrivia loadedTrivia = LoadedTrivia.builder()
+						.triviaTopic(triviaTopic)
+						.triviaTopicDir(dir)
+						.build();
 				this.loadedTrivia.put(dir.getName(), loadedTrivia);
-			} catch (CorruptTriviaPackException e) {
-				LOG.warn("Trivia pack at {} is corrupt.", dir.getAbsolutePath(), e);
+			} catch (CorruptTopicException e) {
+				LOG.warn("Trivia topic at {} is corrupt.", dir.getAbsolutePath(), e);
 			}
 		}
 	}
 
 	/**
-	 * Gets an immutable map of trivia pack names to {@link LoadedTrivia}s.
+	 * Gets an immutable map of trivia topic names to {@link LoadedTrivia}s.
 	 */
 	public Map<String, LoadedTrivia> getTrivia() {
 		return ImmutableMap.copyOf(loadedTrivia);
 	}
 
 	/**
-	 * Gets a particular trivia pack by name.
+	 * Gets a particular trivia topic by name.
 	 * 
-	 * @param triviaPackName
-	 *            Trivia pack name. Non-null.
-	 * @return An optional {@link TriviaPack}.
+	 * @param triviaTopicName
+	 *            Trivia topic name. Non-null.
+	 * @return An optional {@link TriviaTopic}.
 	 */
-	public Optional<LoadedTrivia> getTrivia(String triviaPackName) {
-		Preconditions.checkNotNull(triviaPackName, "triviaPackName must be non-null.");
+	public Optional<LoadedTrivia> getTrivia(String triviaTopicName) {
+		Preconditions.checkNotNull(triviaTopicName, "triviaTopicName must be non-null.");
 
-		return Optional.ofNullable(loadedTrivia.get(triviaPackName));
+		return Optional.ofNullable(loadedTrivia.get(triviaTopicName));
 	}
 
-	private TriviaPack readTriviaPackFromDir(File triviaPackDir) {
-		File metadataFile = new File(triviaPackDir, "metadata.json");
+	private TriviaTopic readTriviaTopicFromDir(File triviaTopicDir) {
+		File metadataFile = new File(triviaTopicDir, "metadata.json");
 		if (!metadataFile.exists()) {
-			throw new CorruptTriviaPackException("metadata.json is missing.");
+			throw new CorruptTopicException("metadata.json is missing.");
 		}
 
-		File questionsFile = new File(triviaPackDir, "questions.json");
+		File questionsFile = new File(triviaTopicDir, "questions.json");
 		if (!questionsFile.exists()) {
-			throw new CorruptTriviaPackException("questions.json is missing.");
+			throw new CorruptTopicException("questions.json is missing.");
 		}
 
 		try {
 			TriviaMetadata metadata = objectMapper.readValue(metadataFile, TriviaMetadata.class);
 			QuestionTemplateBundle questionBundle = objectMapper.readValue(questionsFile, QuestionTemplateBundle.class);
 
-			TriviaPack triviaPack = TriviaPack.builder().metadata(metadata).questionBundle(questionBundle).build();
+			TriviaTopic triviaTopic = TriviaTopic.builder().metadata(metadata).questionBundle(questionBundle).build();
 
-			sanityChecker.check(triviaPack, triviaPackDir);
+			sanityChecker.check(triviaTopic, triviaTopicDir);
 
-			return triviaPack;
+			return triviaTopic;
 
 		} catch (IOException e) {
-			throw new CorruptTriviaPackException("Couldn't deserialize objects from trivia pack.", e);
-		} catch (TriviaPackSanityException e) {
-			throw new CorruptTriviaPackException("Trivia pack has failed sanity checks.", e);
+			throw new CorruptTopicException("Couldn't deserialize objects from trivia topic.", e);
+		} catch (TriviaTopicSanityException e) {
+			throw new CorruptTopicException("Trivia topic has failed sanity checks.", e);
 		}
 	}
 }

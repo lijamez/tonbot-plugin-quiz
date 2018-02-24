@@ -20,7 +20,7 @@ First to answer correctly within 30 seconds wins.
 
 #### Multiple Choice
 Answers are randomized. 
-Trivia packs can include several different correct and incorrect choices. Tonbot can randomly pick from these choices to show to players. 
+Trivia Topics can include several different correct and incorrect choices. Tonbot can randomly pick from these choices to show to players. 
 
 ```
 [5 Points] What was Two Steps From Hell's first public album?
@@ -64,24 +64,24 @@ First to answer correctly within 30 seconds wins.
 First to answer correctly within 30 seconds wins.
 ```
 
-### Custom Trivia Packs
+### Custom Trivia Topics
 Easily create your own trivia questions.
 
 ## Usage
 
-To show all of the installed trivia packs, use the ``trivia list`` command. 
+To show all of the installed trivia topics, use the ``trivia topics`` command. 
 
-To play a trivia pack:
+To play a topic:
 ```
-t, trivia play <Trivia Pack Name>
+t, trivia play <topic>
 ```
 
-If the trivia pack contains music, join a voice channel first.
+If the trivia topic contains music, join a voice channel first.
 
-## Trivia Pack Specification
+## Trivia Topic Specification
 
-A trivia pack is a folder which contains the following files:
-* ``trivia.json`` Includes the trivia pack's metadata, such as trivia pack name, version, description.
+A trivia topic is a folder which contains the following files:
+* ``trivia.json`` Includes the trivia topic's metadata, such as topic name, version, and description.
 * ``questions.json`` Contains the questions.
 * ``music`` A folder which contains music for the music identification questions. Tracks used for music should have correct ID3 tags.
 

@@ -6,7 +6,7 @@ import lombok.NonNull;
 
 @Data
 @Builder
-public class TriviaPack {
+public class TriviaTopic {
 
 	@NonNull
 	private final TriviaMetadata metadata;

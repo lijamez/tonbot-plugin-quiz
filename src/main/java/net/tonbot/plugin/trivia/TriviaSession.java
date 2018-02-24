@@ -19,7 +19,7 @@ import net.tonbot.plugin.trivia.model.QuestionTemplate;
  */
 class TriviaSession {
 
-	private static final long PRE_QUESTION_DELAY_SECONDS = 3;
+	private static final long PRE_QUESTION_DELAY_SECONDS = 5;
 
 	private final QuietTriviaListener listener;
 	private final LoadedTrivia trivia;
@@ -48,7 +48,7 @@ class TriviaSession {
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 
 		this.availableQuestionTemplates = new ArrayList<>(
-				this.trivia.getTriviaPack().getQuestionBundle().getQuestionTemplates());
+				this.trivia.getTriviaTopic().getQuestionBundle().getQuestionTemplates());
 		this.totalQuestionsToAsk = Math.min(config.getMaxQuestions(), availableQuestionTemplates.size());
 
 		this.numQuestionsAsked = 0;
@@ -67,7 +67,7 @@ class TriviaSession {
 					"The session has already started or has already ended.");
 
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
-					.triviaMetadata(trivia.getTriviaPack().getMetadata()).startingInSeconds(PRE_QUESTION_DELAY_SECONDS)
+					.triviaMetadata(trivia.getTriviaTopic().getMetadata())
 					.difficultyName(config.getDifficultyName()).build();
 
 			listener.onRoundStart(roundStartEvent);
@@ -218,7 +218,7 @@ class TriviaSession {
 		File imageFile = null;
 		if (!q.getImagePaths().isEmpty()) {
 			String imagePath = q.getImagePaths().get(random.nextInt(q.getImagePaths().size()));
-			imageFile = new File(trivia.getTriviaPackDir(), imagePath);
+			imageFile = new File(trivia.getTriviaTopicDir(), imagePath);
 		}
 
 		return imageFile;

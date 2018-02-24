@@ -12,9 +12,9 @@ import net.tonbot.common.Param;
 public class PlayRequest {
 
 	@Getter
-	@Param(name = "trivia pack", ordinal = 0, description = "The trivia pack name.")
+	@Param(name = "topic", ordinal = 0, description = "The trivia topic name.")
 	@Nonnull
-	private String triviaPackName;
+	private String topic;
 
 	@Getter
 	@Param(name = "difficulty", ordinal = 1, description = "The difficulty.")

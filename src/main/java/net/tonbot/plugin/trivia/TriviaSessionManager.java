@@ -35,23 +35,23 @@ class TriviaSessionManager {
 	 * 
 	 * @param sessionKey
 	 *            {@link TriviaSessionKey}. Non-null.
-	 * @param triviaPackName
-	 *            The trivia pack name. Must be the name of a valid trivia pack.
+	 * @param triviaTopicName
+	 *            The trivia topic name. Must be the name of a valid trivia topic.
 	 *            Non-null.
 	 * @param difficulty
 	 *            The {@link Difficulty.} Non-null.
 	 * @return The new {@link TriviaSession}.
-	 * @throws InvalidTriviaPackException
-	 *             if the specified trivia pack is not valid.
+	 * @throws InvalidTopicException
+	 *             if the specified trivia topic is not valid.
 	 */
-	public TriviaSession createSession(TriviaSessionKey sessionKey, String triviaPackName, Difficulty difficulty,
+	public TriviaSession createSession(TriviaSessionKey sessionKey, String triviaTopicName, Difficulty difficulty,
 			TriviaListener listener) {
 		Preconditions.checkNotNull(sessionKey, "sessionKey must be non-null.");
-		Preconditions.checkNotNull(triviaPackName, "triviaPackName must be non-null.");
+		Preconditions.checkNotNull(triviaTopicName, "triviaTopicName must be non-null.");
 		Preconditions.checkNotNull(difficulty, "difficulty must be non-null.");
 
-		LoadedTrivia loadedTrivia = triviaLibrary.getTrivia(triviaPackName)
-				.orElseThrow(() -> new InvalidTriviaPackException("Trivia pack " + triviaPackName + " is not valid."));
+		LoadedTrivia loadedTrivia = triviaLibrary.getTrivia(triviaTopicName)
+				.orElseThrow(() -> new InvalidTopicException("Trivia topic " + triviaTopicName + " is not valid."));
 		TriviaConfiguration triviaConfig = getConfigFor(difficulty);
 		TriviaSession triviaSession = new TriviaSession(listener, loadedTrivia, triviaConfig, random);
 		TriviaSession oldSession = this.sessions.put(sessionKey, triviaSession);

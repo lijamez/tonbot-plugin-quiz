@@ -16,8 +16,5 @@ class RoundStartEvent {
 	private final TriviaMetadata triviaMetadata;
 
 	@NonNull
-	private final Long startingInSeconds;
-
-	@NonNull
 	private final String difficultyName;
 }

@@ -36,7 +36,7 @@ import sx.blah.discord.util.EmbedBuilder;
 class PlayActivity implements Activity {
 
 	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder().route("trivia play")
-			.parameters(ImmutableList.of("<trivia pack>", "[difficulty]"))
+			.parameters(ImmutableList.of("<topic>", "[difficulty]"))
 			.description("Starts a round in the current channel.").build();
 
 	private final IDiscordClient discordClient;
@@ -69,16 +69,15 @@ class PlayActivity implements Activity {
 			Difficulty effectiveDifficulty = request.getDifficulty() != null ? request.getDifficulty()
 					: Difficulty.MEDIUM;
 
-			triviaSessionManager.createSession(sessionKey, request.getTriviaPackName(), effectiveDifficulty,
+			triviaSessionManager.createSession(sessionKey, request.getTopic(), effectiveDifficulty,
 					new TriviaListener() {
 
 						@Override
 						public void onRoundStart(RoundStartEvent roundStartEvent) {
 							TriviaMetadata metadata = roundStartEvent.getTriviaMetadata();
 							String msg = String.format(
-									":checkered_flag: Starting ``%s`` on %s difficulty in %d seconds...",
-									metadata.getName(), roundStartEvent.getDifficultyName(),
-									roundStartEvent.getStartingInSeconds());
+									":checkered_flag: Starting ``%s`` on %s difficulty...",
+									metadata.getName(), roundStartEvent.getDifficultyName());
 							botUtils.sendMessageSync(event.getChannel(), msg);
 						}
 
@@ -292,9 +291,9 @@ class PlayActivity implements Activity {
 						}
 
 					});
-		} catch (InvalidTriviaPackException e) {
+		} catch (InvalidTopicException e) {
 			throw new TonbotBusinessException(
-					"Invalid trivia pack name. Use the ``trivia list`` command to see the available trivia packs.");
+					"Invalid topic name. Use the ``trivia topics`` command to see the available topics.");
 		}
 	}
 }
