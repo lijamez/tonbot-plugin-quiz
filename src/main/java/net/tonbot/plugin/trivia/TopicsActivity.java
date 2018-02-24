@@ -1,7 +1,6 @@
 package net.tonbot.plugin.trivia;
 
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -41,11 +40,13 @@ class TopicsActivity implements Activity {
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.withTitle("Trivia Topics");
 
-		for (Entry<String, LoadedTrivia> entry : triviaMap.entrySet()) {
-			eb.appendField(entry.getKey(), entry.getValue().getTriviaTopic().getMetadata().getDescription(), false);
-		}
+		triviaMap.entrySet().stream()
+			.sorted((a, b) -> a.getKey().compareTo(b.getKey()))
+			.forEach(entry -> {
+				eb.appendField(entry.getKey(), entry.getValue().getTriviaTopic().getMetadata().getDescription(), false);
+			});
 
-		eb.withFooterText("Use the command ``trivia play`` command to play them.");
+		eb.withFooterText("Use the ``trivia play`` command to play them.");
 
 		botUtils.sendEmbed(event.getChannel(), eb.build());
 	}
