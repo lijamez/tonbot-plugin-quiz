@@ -11,8 +11,8 @@ class TriviaConfiguration {
 	// The maximum number of questions to ask.
 	private final int maxQuestions;
 
-	// The amount of time in seconds to give to players.
-	private final long questionTimeSeconds;
+	// The amount of time in milliseconds to give to players per question.
+	private final long defaultTimePerQuestion;
 
 	// The maximum number of choices for multiple choice questions.
 	private final int maxMultipleChoices;

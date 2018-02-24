@@ -256,7 +256,7 @@ class PlayActivity implements Activity {
 							eb.withColor(color);
 							eb.withFooterText(
 									String.format("First to correctly answer within %d seconds wins %d points",
-											qse.getMaxDurationSeconds(), qse.getQuestion().getPoints()));
+											qse.getMaxDurationMs() / 1000, qse.getQuestion().getPoints()));
 
 							eb.withAuthorName(String.format("Question %d of %d", qse.getQuestionNumber(),
 									qse.getTotalQuestions()));

@@ -25,7 +25,7 @@ class MultipleChoiceQuestionStartEvent extends QuestionStartEvent {
 	 *            Question number.
 	 * @param totalQuestions
 	 *            The total number of questions expected to be asked.
-	 * @param maxDurationSeconds
+	 * @param maxDurationMs
 	 *            The maximum time to wait for a correct answer. Must be positive.
 	 * @param choices
 	 *            The choices for this particular ask of the question.
@@ -34,8 +34,8 @@ class MultipleChoiceQuestionStartEvent extends QuestionStartEvent {
 	 */
 	@Builder
 	private MultipleChoiceQuestionStartEvent(MultipleChoiceQuestionTemplate mcQuestion, long questionNumber,
-			long totalQuestions, long maxDurationSeconds, List<Choice> choices, File imageFile) {
-		super(mcQuestion, questionNumber, totalQuestions, maxDurationSeconds, imageFile);
+			long totalQuestions, long maxDurationMs, List<Choice> choices, File imageFile) {
+		super(mcQuestion, questionNumber, totalQuestions, maxDurationMs, imageFile);
 
 		Preconditions.checkNotNull(choices, "choices must be non-null.");
 		this.choices = ImmutableList.copyOf(choices);

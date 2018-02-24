@@ -19,7 +19,7 @@ import net.tonbot.plugin.trivia.model.QuestionTemplate;
  */
 class TriviaSession {
 
-	private static final long PRE_QUESTION_DELAY_SECONDS = 5;
+	private static final long PRE_QUESTION_DELAY_MS = 4000;
 
 	private final QuietTriviaListener listener;
 	private final LoadedTrivia trivia;
@@ -117,7 +117,7 @@ class TriviaSession {
 					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
 					this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, config, listener);
 					this.currentQuestionHandler.notifyStart(this.numQuestionsAsked, this.totalQuestionsToAsk,
-							config.getQuestionTimeSeconds(), imageFile);
+							config.getDefaultTimePerQuestion(), imageFile);
 					this.timer.replaceSchedule(() -> {
 						try {
 							timeoutQuestion();
@@ -125,7 +125,7 @@ class TriviaSession {
 							// Timeout call was a bit late, and the game must've ended.
 							// Hence this is ignorable.
 						}
-					}, config.getQuestionTimeSeconds(), TimeUnit.SECONDS);
+					}, config.getDefaultTimePerQuestion(), TimeUnit.MILLISECONDS);
 				} finally {
 					lock.unlock();
 				}
@@ -142,7 +142,7 @@ class TriviaSession {
 			};
 		}
 
-		this.delayTimer.schedule(runnable, PRE_QUESTION_DELAY_SECONDS, TimeUnit.SECONDS);
+		this.delayTimer.schedule(runnable, PRE_QUESTION_DELAY_MS, TimeUnit.MILLISECONDS);
 	}
 
 	/**

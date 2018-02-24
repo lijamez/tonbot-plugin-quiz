@@ -15,12 +15,12 @@ interface QuestionHandler {
 	 *            The current question number.
 	 * @param totalQuestions
 	 *            The total number of questions to be asked.
-	 * @param maxDurationSeconds
-	 *            The maximum amount of time that will be waited.
+	 * @param maxDurationMs
+	 *            The maximum amount of time that will be waited in milliseconds.
 	 * @param imageFile
 	 *            Image file. Nullable.
 	 */
-	void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds, File imageFile);
+	void notifyStart(long questionNumber, long totalQuestions, long maxDurationMs, File imageFile);
 
 	/**
 	 * Checks whether if the user's message answers the question.

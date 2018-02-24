@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-class TriviaSessionManager {
+import net.tonbot.plugin.trivia.model.TriviaTopic;
 
-	private static final int MAX_QUESTIONS = 10;
+class TriviaSessionManager {
 
 	private final TriviaLibrary triviaLibrary;
 	private final Random random;
@@ -52,7 +52,7 @@ class TriviaSessionManager {
 
 		LoadedTrivia loadedTrivia = triviaLibrary.getTrivia(triviaTopicName)
 				.orElseThrow(() -> new InvalidTopicException("Trivia topic " + triviaTopicName + " is not valid."));
-		TriviaConfiguration triviaConfig = getConfigFor(difficulty);
+		TriviaConfiguration triviaConfig = getConfigFor(loadedTrivia.getTriviaTopic(), difficulty);
 		TriviaSession triviaSession = new TriviaSession(listener, loadedTrivia, triviaConfig, random);
 		TriviaSession oldSession = this.sessions.put(sessionKey, triviaSession);
 
@@ -65,23 +65,21 @@ class TriviaSessionManager {
 		return triviaSession;
 	}
 
-	private TriviaConfiguration getConfigFor(Difficulty difficulty) {
-		TriviaConfiguration tc;
-
-		if (difficulty == Difficulty.EASY) {
-			tc = TriviaConfiguration.builder().maxQuestions(MAX_QUESTIONS).questionTimeSeconds(30)
-					.scoreDecayFactor(0.75).maxMultipleChoices(4).difficultyName(difficulty.getFriendlyName()).build();
-		} else if (difficulty == Difficulty.MEDIUM) {
-			tc = TriviaConfiguration.builder().maxQuestions(MAX_QUESTIONS).questionTimeSeconds(30).scoreDecayFactor(0.5)
-					.maxMultipleChoices(5).difficultyName(difficulty.getFriendlyName()).build();
-		} else if (difficulty == Difficulty.HARD) {
-			tc = TriviaConfiguration.builder().maxQuestions(MAX_QUESTIONS).questionTimeSeconds(20)
-					.scoreDecayFactor(0.25).maxMultipleChoices(8).difficultyName(difficulty.getFriendlyName()).build();
-		} else {
-			throw new IllegalArgumentException(
-					"Can't generate TriviaConfiguration for unknown difficulty " + difficulty);
-		}
-
+	private TriviaConfiguration getConfigFor(TriviaTopic topic, Difficulty difficulty) {
+		Preconditions.checkNotNull(topic, "topic must be non-null.");
+		Preconditions.checkNotNull(difficulty, "difficulty must be non-null.");
+		
+		int maxQuestions = topic.getMetadata().getDefaultQuestionsPerRound();
+		long defaultTimePerQuestion = topic.getMetadata().getDefaultTimePerQuestion();
+		
+		TriviaConfiguration tc = TriviaConfiguration.builder()
+				.maxQuestions(maxQuestions)
+				.defaultTimePerQuestion(defaultTimePerQuestion)
+				.difficultyName(difficulty.getFriendlyName())
+				.scoreDecayFactor(difficulty.getScoreDecayFactor())
+				.maxMultipleChoices(difficulty.getMaxMultipleChoices())
+				.build();
+		
 		return tc;
 	}
 
