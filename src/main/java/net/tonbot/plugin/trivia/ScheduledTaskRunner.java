@@ -9,13 +9,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.common.base.Preconditions;
 
-class TriviaQuestionTimer {
+class ScheduledTaskRunner {
 
 	private ScheduledExecutorService executorService;
 	private ScheduledFuture<?> scheduledTaskFuture;
 	private ReentrantLock lock;
 
-	public TriviaQuestionTimer() {
+	public ScheduledTaskRunner() {
 		this.executorService = Executors.newScheduledThreadPool(1);
 		this.lock = new ReentrantLock();
 	}
@@ -56,7 +56,8 @@ class TriviaQuestionTimer {
 
 	/**
 	 * Cancels the previously scheduled task, if it exists. Tasks may still be
-	 * scheduled after cancellation of the previous task.
+	 * scheduled after cancellation of the previous task. 
+	 * This operation does not interrupt any currently executing task.
 	 */
 	public void cancel() {
 		lock.lock();

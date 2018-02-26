@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -36,8 +34,7 @@ class TriviaSession {
 
 	private Scorekeeper scorekeeper;
 
-	private ScheduledExecutorService delayTimer;
-	private TriviaQuestionTimer timer;
+	private ScheduledTaskRunner scheduledTaskRunner;
 	private ReentrantLock lock;
 
 	public TriviaSession(TriviaListener listener, LoadedTrivia trivia, TriviaConfiguration config, Random random, QuestionHandlers questionHandlers) {
@@ -57,8 +54,7 @@ class TriviaSession {
 		this.state = TriviaSessionState.NOT_STARTED;
 		this.currentQuestionHandler = null;
 		this.scorekeeper = new Scorekeeper(config.getScoreDecayFactor());
-		this.delayTimer = Executors.newScheduledThreadPool(1);
-		this.timer = new TriviaQuestionTimer();
+		this.scheduledTaskRunner = new ScheduledTaskRunner();
 		this.lock = new ReentrantLock();
 	}
 
@@ -120,7 +116,7 @@ class TriviaSession {
 					this.currentQuestionHandler = questionHandlers.get(nextQuestion, config, listener, trivia);
 					this.currentQuestionHandler.notifyStart(this.numQuestionsAsked, this.totalQuestionsToAsk,
 							config.getDefaultTimePerQuestion(), imageFile);
-					this.timer.replaceSchedule(() -> {
+					this.scheduledTaskRunner.replaceSchedule(() -> {
 						try {
 							timeoutQuestion();
 						} catch (IllegalStateException e) {
@@ -133,7 +129,7 @@ class TriviaSession {
 				}
 			};
 		} else {
-			this.timer.cancel();
+			this.scheduledTaskRunner.cancel();
 
 			this.currentQuestionHandler = null;
 			this.state = TriviaSessionState.ENDED;
@@ -144,7 +140,7 @@ class TriviaSession {
 			};
 		}
 
-		this.delayTimer.schedule(runnable, PRE_QUESTION_DELAY_MS, TimeUnit.MILLISECONDS);
+		this.scheduledTaskRunner.replaceSchedule(runnable, PRE_QUESTION_DELAY_MS, TimeUnit.MILLISECONDS);
 	}
 
 	/**
@@ -170,7 +166,7 @@ class TriviaSession {
 			}
 
 			if (correct.get()) {
-				this.timer.cancel();
+				this.scheduledTaskRunner.cancel();
 				long incorrectAttempts = this.scorekeeper.getIncorrectAnswers(userMessage.getUserId());
 				long awardedPoints = this.scorekeeper.logCorrectAnswerAndAdvance(userMessage.getUserId());
 
@@ -206,7 +202,7 @@ class TriviaSession {
 				return;
 			}
 
-			this.timer.cancel();
+			this.scheduledTaskRunner.cancel();
 			this.state = TriviaSessionState.ENDED;
 			RoundEndEvent roundEndEvent = RoundEndEvent.builder().scores(this.scorekeeper.getScores()).build();
 			listener.onRoundEnd(roundEndEvent);
