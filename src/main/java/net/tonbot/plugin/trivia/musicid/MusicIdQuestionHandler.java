@@ -109,10 +109,7 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 	public Optional<Boolean> checkCorrectness(UserMessage userMessage) {
 		String answer = userMessage.getMessage();
 		
-		List<String> tagValues = audioFile.getTag()
-			.getAll(tagToAsk.getTag().getFieldKey());
-		
-		boolean answerIsCorrect = FuzzyMatcher.matches(answer, tagValues);
+		boolean answerIsCorrect = FuzzyMatcher.matches(answer, tagToAsk.getValues());
 		
 		return Optional.of(answerIsCorrect);
 	}
