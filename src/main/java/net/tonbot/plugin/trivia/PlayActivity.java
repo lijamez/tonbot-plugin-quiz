@@ -205,7 +205,7 @@ class PlayActivity implements Activity {
 								question = "What is the " + musicIdQuestionStartEvent.getTagToAsk() + " of this track?";
 								break;
 							}
-							eb.withTitle(question);
+							eb.withTitle("🎵 " + question);
 							
 							LOG.info(musicIdQuestionStartEvent.toString());
 							botUtils.sendEmbed(event.getChannel(), eb.build());
