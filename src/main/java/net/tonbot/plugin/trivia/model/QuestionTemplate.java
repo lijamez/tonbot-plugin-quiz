@@ -14,7 +14,7 @@ import lombok.Data;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @Type(value = ShortAnswerQuestionTemplate.class, name = "short_answer"),
 		@Type(value = MultipleChoiceQuestionTemplate.class, name = "multiple_choice"),
-		@Type(value = MusicIdentificationQuestionTemplate.class, name = "music_identification") })
+		@Type(value = MusicIdQuestionTemplate.class, name = "music_id") })
 public abstract class QuestionTemplate {
 
 	private final long points;

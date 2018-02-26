@@ -26,6 +26,7 @@ class TriviaSession {
 	private final List<QuestionTemplate> availableQuestionTemplates;
 	private final TriviaConfiguration config;
 	private final Random random;
+	private final QuestionHandlers questionHandlers;
 	private final long totalQuestionsToAsk;
 
 	private long numQuestionsAsked;
@@ -39,13 +40,14 @@ class TriviaSession {
 	private TriviaQuestionTimer timer;
 	private ReentrantLock lock;
 
-	public TriviaSession(TriviaListener listener, LoadedTrivia trivia, TriviaConfiguration config, Random random) {
+	public TriviaSession(TriviaListener listener, LoadedTrivia trivia, TriviaConfiguration config, Random random, QuestionHandlers questionHandlers) {
 
 		Preconditions.checkNotNull(listener, "listener must be non-null.");
 		this.listener = new QuietTriviaListener(listener);
 		this.trivia = Preconditions.checkNotNull(trivia, "trivia must be non-null.");
 		this.config = Preconditions.checkNotNull(config, "config must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
+		this.questionHandlers = Preconditions.checkNotNull(questionHandlers, "questionHandlers must be non-null.");
 
 		this.availableQuestionTemplates = new ArrayList<>(
 				this.trivia.getTriviaTopic().getQuestionBundle().getQuestionTemplates());
@@ -115,7 +117,7 @@ class TriviaSession {
 					File imageFile = getRandomImageFile(nextQuestion);
 
 					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
-					this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, config, listener);
+					this.currentQuestionHandler = questionHandlers.get(nextQuestion, config, listener, trivia);
 					this.currentQuestionHandler.notifyStart(this.numQuestionsAsked, this.totalQuestionsToAsk,
 							config.getDefaultTimePerQuestion(), imageFile);
 					this.timer.replaceSchedule(() -> {

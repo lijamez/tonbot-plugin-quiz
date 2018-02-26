@@ -1,6 +1,9 @@
 package net.tonbot.plugin.trivia;
 
-interface TriviaListener {
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
+
+public interface TriviaListener {
 
 	void onRoundStart(RoundStartEvent roundStartEvent);
 

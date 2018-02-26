@@ -6,7 +6,7 @@ import lombok.NonNull;
 
 @Data
 @Builder
-class TriviaConfiguration {
+public class TriviaConfiguration {
 
 	// The maximum number of questions to ask.
 	private final int maxQuestions;

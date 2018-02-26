@@ -12,6 +12,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -26,6 +28,8 @@ import net.tonbot.plugin.trivia.model.Choice;
 import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate;
 import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.obj.ReactionEmoji;
@@ -34,7 +38,8 @@ import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.EmbedBuilder;
 
 class PlayActivity implements Activity {
-
+	
+	private static final Logger LOG = LoggerFactory.getLogger(PlayActivity.class);
 	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder().route("trivia play")
 			.parameters(ImmutableList.of("<topic>", "[difficulty]"))
 			.description("Starts a round in the current channel.").build();
@@ -183,14 +188,38 @@ class PlayActivity implements Activity {
 
 						@Override
 						public void onMusicIdQuestionStart(MusicIdQuestionStartEvent musicIdQuestionStartEvent) {
-							// TODO
-							botUtils.sendMessageSync(event.getChannel(), musicIdQuestionStartEvent.toString());
+							EmbedBuilder eb = getQuestionEmbedBuilder(musicIdQuestionStartEvent);
+							
+							String question = null;
+							switch (musicIdQuestionStartEvent.getTagToAsk()) {
+							case TITLE:
+								question = "What's the title of this track?";
+								break;
+							case ALBUM:
+								question = "What album did this track originally come from?";
+								break;
+							case COMPOSER:
+								question = "Who is the composer of this track?";
+								break;
+							default:
+								question = "What is the " + musicIdQuestionStartEvent.getTagToAsk() + " of this track?";
+								break;
+							}
+							eb.withTitle(question);
+							
+							LOG.info(musicIdQuestionStartEvent.toString());
+							botUtils.sendEmbed(event.getChannel(), eb.build());
 						}
 
 						@Override
 						public void onMusicIdQuestionEnd(MusicIdQuestionEndEvent musicIdQuestionEndEvent) {
-							// TODO
-							botUtils.sendMessageSync(event.getChannel(), musicIdQuestionEndEvent.toString());
+							Win win = musicIdQuestionEndEvent.getWin().orElse(null);
+							String canonicalAnswer = musicIdQuestionEndEvent.getCanonicalAnswer();
+
+							String msg = getStandardRoundEndMessage(win,
+									win != null ? win.getWinningMessage().getMessage() : canonicalAnswer);
+
+							botUtils.sendMessageSync(event.getChannel(), msg);
 						}
 
 						@Override

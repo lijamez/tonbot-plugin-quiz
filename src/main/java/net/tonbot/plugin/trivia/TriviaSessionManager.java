@@ -13,13 +13,15 @@ class TriviaSessionManager {
 
 	private final TriviaLibrary triviaLibrary;
 	private final Random random;
+	private final QuestionHandlers questionHandlers;
 
 	private final ConcurrentHashMap<TriviaSessionKey, TriviaSession> sessions;
 
 	@Inject
-	public TriviaSessionManager(TriviaLibrary triviaLibrary, Random random) {
+	public TriviaSessionManager(TriviaLibrary triviaLibrary, Random random, QuestionHandlers questionHandlers) {
 		this.triviaLibrary = Preconditions.checkNotNull(triviaLibrary, "triviaLibrary must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
+		this.questionHandlers = Preconditions.checkNotNull(questionHandlers, "questionHandlers must be non-null.");
 
 		this.sessions = new ConcurrentHashMap<>();
 	}
@@ -53,7 +55,7 @@ class TriviaSessionManager {
 		LoadedTrivia loadedTrivia = triviaLibrary.getTrivia(triviaTopicName)
 				.orElseThrow(() -> new InvalidTopicException("Trivia topic " + triviaTopicName + " is not valid."));
 		TriviaConfiguration triviaConfig = getConfigFor(loadedTrivia.getTriviaTopic(), difficulty);
-		TriviaSession triviaSession = new TriviaSession(listener, loadedTrivia, triviaConfig, random);
+		TriviaSession triviaSession = new TriviaSession(listener, loadedTrivia, triviaConfig, random, questionHandlers);
 		TriviaSession oldSession = this.sessions.put(sessionKey, triviaSession);
 
 		if (oldSession != null) {

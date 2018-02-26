@@ -5,7 +5,7 @@ import java.util.Optional;
 import lombok.Data;
 
 @Data
-abstract class QuestionEndEvent {
+public abstract class QuestionEndEvent {
 
 	private final boolean timedOut;
 	private final Win win;

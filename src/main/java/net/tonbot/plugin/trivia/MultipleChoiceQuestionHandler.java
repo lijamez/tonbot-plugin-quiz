@@ -10,7 +10,6 @@ import com.google.common.base.Preconditions;
 
 import net.tonbot.plugin.trivia.model.Choice;
 import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate;
-import net.tonbot.plugin.trivia.model.QuestionTemplate;
 
 class MultipleChoiceQuestionHandler implements QuestionHandler {
 
@@ -23,11 +22,6 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
 		this.choices = getChoices(this.question, config.getMaxMultipleChoices());
-	}
-
-	@Override
-	public QuestionTemplate getQuestion() {
-		return question;
 	}
 
 	@Override
@@ -77,8 +71,10 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 		Choice correctChoice = this.choices.stream().filter(c -> c.isCorrect()).findFirst()
 				.orElseThrow(() -> new IllegalStateException("No correct choice found."));
 
-		MultipleChoiceQuestionEndEvent endEvent = MultipleChoiceQuestionEndEvent.builder().correctChoice(correctChoice)
-				.timedOut(userMessage == null).win(
+		MultipleChoiceQuestionEndEvent endEvent = MultipleChoiceQuestionEndEvent.builder()
+				.correctChoice(correctChoice)
+				.timedOut(userMessage == null)
+				.win(
 						userMessage != null
 								? Win.builder().pointsAwarded(pointsAwarded).incorrectAttempts(incorrectAttempts)
 										.winningMessage(userMessage).build()

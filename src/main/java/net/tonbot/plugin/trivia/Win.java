@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-class Win {
+public class Win {
 
 	private final Long pointsAwarded;
 	private final long incorrectAttempts;

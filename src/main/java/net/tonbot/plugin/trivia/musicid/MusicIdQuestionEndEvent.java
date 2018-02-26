@@ -1,14 +1,16 @@
-package net.tonbot.plugin.trivia;
+package net.tonbot.plugin.trivia.musicid;
 
 import com.google.common.base.Preconditions;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import net.tonbot.plugin.trivia.QuestionEndEvent;
+import net.tonbot.plugin.trivia.Win;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-class MusicIdQuestionEndEvent extends QuestionEndEvent {
+public class MusicIdQuestionEndEvent extends QuestionEndEvent {
 
 	private final String canonicalAnswer;
 

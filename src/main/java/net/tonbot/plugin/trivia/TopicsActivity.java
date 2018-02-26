@@ -39,7 +39,7 @@ class TopicsActivity implements Activity {
 
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.withTitle("Trivia Topics");
-
+		
 		triviaMap.entrySet().stream()
 			.sorted((a, b) -> a.getKey().compareTo(b.getKey()))
 			.forEach(entry -> {

@@ -3,11 +3,7 @@ package net.tonbot.plugin.trivia;
 import java.io.File;
 import java.util.Optional;
 
-import net.tonbot.plugin.trivia.model.QuestionTemplate;
-
-interface QuestionHandler {
-
-	QuestionTemplate getQuestion();
+public interface QuestionHandler {
 
 	/**
 	 * 

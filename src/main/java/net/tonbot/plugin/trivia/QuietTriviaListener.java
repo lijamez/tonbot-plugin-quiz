@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
+
 /**
  * A {@link TriviaListener} wrapper which never throws exceptions which prevents
  * interruption of the {@link TriviaSession} if something goes wrong with the
@@ -74,7 +77,7 @@ class QuietTriviaListener implements TriviaListener {
 		try {
 			runnable.run();
 		} catch (Exception e) {
-			LOG.warn("Listener has thrown an exception.", e);
+			LOG.error("Listener has thrown an exception.", e);
 		}
 	}
 

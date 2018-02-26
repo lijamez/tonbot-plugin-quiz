@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NonNull;
 
 @Data
-class UserMessage {
+public class UserMessage {
 
 	private final long userId;
 

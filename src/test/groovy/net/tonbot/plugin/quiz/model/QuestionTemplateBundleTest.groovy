@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import net.tonbot.plugin.trivia.model.Choice
 import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate
-import net.tonbot.plugin.trivia.model.MusicIdentificationQuestionTemplate
+import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate
 import net.tonbot.plugin.trivia.model.QuestionTemplateBundle
 import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate
-import net.tonbot.plugin.trivia.model.TrackProperty
+import net.tonbot.plugin.trivia.musicid.Tag
 import spock.lang.Specification
 
 class QuestionTemplateBundleTest extends Specification {
@@ -47,9 +47,9 @@ class QuestionTemplateBundleTest extends Specification {
 				    ]
 				},
 				{
-				    "type":"music_identification",
-				    "track_path":"mySong.mp3",
-				    "ask_for" : ["RELEASE_YEAR", "TITLE", "ALBUM_NAME", "ARTIST_NAME", "COMPOSER"]
+				    "type":"music_id",
+				    "audio":"mySong.mp3",
+				    "tags" : ["TITLE"]
 				}
 			]
 		}
@@ -79,14 +79,9 @@ class QuestionTemplateBundleTest extends Specification {
 							.build()
 						])
 					.build(),
-				MusicIdentificationQuestionTemplate.builder()
-					.trackPath("mySong.mp3")
-					.askFor([
-						TrackProperty.RELEASE_YEAR,
-						TrackProperty.TITLE,
-						TrackProperty.ALBUM_NAME,
-						TrackProperty.ARTIST_NAME,
-						TrackProperty.COMPOSER])
+				MusicIdQuestionTemplate.builder()
+					.audioPath("mySong.mp3")
+					.tags([Tag.TITLE] as Set)
 					.build()
 				])
 			.build()
