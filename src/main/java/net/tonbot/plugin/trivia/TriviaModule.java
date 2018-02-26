@@ -13,6 +13,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 
 import net.tonbot.common.Activity;
 import net.tonbot.common.BotUtils;
@@ -66,5 +69,13 @@ class TriviaModule extends AbstractModule {
 	@Singleton
 	Random random() {
 		return new Random(System.currentTimeMillis());
+	}
+	
+	@Provides
+	@Singleton
+	AudioPlayerManager audioPlayerManager() {
+		AudioPlayerManager apm = new DefaultAudioPlayerManager();
+		AudioSourceManagers.registerLocalSource(apm);
+		return apm;
 	}
 }

@@ -99,7 +99,7 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 				.maxDurationMs(maxDurationMs)
 				.question(questionTemplate)
 				.tagToAsk(tagToAsk.getTag())
-				.audioFile(new File(questionTemplate.getAudioPath()))
+				.audioFile(audioFile.getFile())
 				.build();
 				
 		listener.onMusicIdQuestionStart(event);

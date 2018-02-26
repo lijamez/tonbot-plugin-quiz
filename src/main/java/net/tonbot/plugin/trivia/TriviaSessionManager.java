@@ -14,11 +14,14 @@ class TriviaSessionManager {
 	private final TriviaLibrary triviaLibrary;
 	private final Random random;
 	private final QuestionHandlers questionHandlers;
-
+	
 	private final ConcurrentHashMap<TriviaSessionKey, TriviaSession> sessions;
 
 	@Inject
-	public TriviaSessionManager(TriviaLibrary triviaLibrary, Random random, QuestionHandlers questionHandlers) {
+	public TriviaSessionManager(
+			TriviaLibrary triviaLibrary, 
+			Random random, 
+			QuestionHandlers questionHandlers) {
 		this.triviaLibrary = Preconditions.checkNotNull(triviaLibrary, "triviaLibrary must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 		this.questionHandlers = Preconditions.checkNotNull(questionHandlers, "questionHandlers must be non-null.");

@@ -4,7 +4,14 @@ import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
 
 public interface TriviaListener {
-
+	
+	void onCrash();
+	
+	/**
+	 * Called as the round begins. This method should throw {@link TonbotBusinessException} if the listener is not prepared to start the round.
+	 * @param roundStartEvent {@link RoundStartEvent}
+	 * @throws TonbotBusinessException if the listener is not prepared to start the round.
+	 */
 	void onRoundStart(RoundStartEvent roundStartEvent);
 
 	void onRoundEnd(RoundEndEvent roundEndEvent);
