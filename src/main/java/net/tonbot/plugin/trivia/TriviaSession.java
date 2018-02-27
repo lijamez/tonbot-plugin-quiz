@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.common.base.Preconditions;
 
+import net.tonbot.common.TonbotBusinessException;
+import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate;
 import net.tonbot.plugin.trivia.model.QuestionTemplate;
 
 /**
@@ -21,11 +21,12 @@ class TriviaSession {
 
 	private static final long PRE_QUESTION_DELAY_MS = 4000;
 
-	private final QuietTriviaListener listener;
+	private final SessionDestroyingTriviaListener listener;
 	private final LoadedTrivia trivia;
 	private final List<QuestionTemplate> availableQuestionTemplates;
 	private final TriviaConfiguration config;
 	private final Random random;
+	private final QuestionHandlers questionHandlers;
 	private final long totalQuestionsToAsk;
 
 	private long numQuestionsAsked;
@@ -35,17 +36,22 @@ class TriviaSession {
 
 	private Scorekeeper scorekeeper;
 
-	private ScheduledExecutorService delayTimer;
-	private TriviaQuestionTimer timer;
+	private ScheduledTaskRunner scheduledTaskRunner;
 	private ReentrantLock lock;
 
-	public TriviaSession(TriviaListener listener, LoadedTrivia trivia, TriviaConfiguration config, Random random) {
+	public TriviaSession(
+			TriviaListener listener, 
+			LoadedTrivia trivia, 
+			TriviaConfiguration config, 
+			Random random, 
+			QuestionHandlers questionHandlers) {
 
 		Preconditions.checkNotNull(listener, "listener must be non-null.");
-		this.listener = new QuietTriviaListener(listener);
+		this.listener = new SessionDestroyingTriviaListener(listener, this);
 		this.trivia = Preconditions.checkNotNull(trivia, "trivia must be non-null.");
 		this.config = Preconditions.checkNotNull(config, "config must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
+		this.questionHandlers = Preconditions.checkNotNull(questionHandlers, "questionHandlers must be non-null.");
 
 		this.availableQuestionTemplates = new ArrayList<>(
 				this.trivia.getTriviaTopic().getQuestionBundle().getQuestionTemplates());
@@ -55,8 +61,7 @@ class TriviaSession {
 		this.state = TriviaSessionState.NOT_STARTED;
 		this.currentQuestionHandler = null;
 		this.scorekeeper = new Scorekeeper(config.getScoreDecayFactor());
-		this.delayTimer = Executors.newScheduledThreadPool(1);
-		this.timer = new TriviaQuestionTimer();
+		this.scheduledTaskRunner = new ScheduledTaskRunner();
 		this.lock = new ReentrantLock();
 	}
 
@@ -65,12 +70,24 @@ class TriviaSession {
 		try {
 			Preconditions.checkState(this.state == TriviaSessionState.NOT_STARTED,
 					"The session has already started or has already ended.");
+			
+			boolean hasAudio = availableQuestionTemplates.stream()
+				.filter(qt -> (qt instanceof MusicIdQuestionTemplate))
+				.findAny()
+				.isPresent();
 
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(trivia.getTriviaTopic().getMetadata())
-					.difficultyName(config.getDifficultyName()).build();
-
-			listener.onRoundStart(roundStartEvent);
+					.difficultyName(config.getDifficultyName())
+					.hasAudio(hasAudio)
+					.build();
+			
+			try {
+				listener.onRoundStart(roundStartEvent);
+			} catch (TonbotBusinessException e) {
+				destroy();
+				throw e;
+			}
 
 			// This delay prevents a race condition from occurring which causes the trivia
 			// session to treat the user's "play" command as an input in takeInput().
@@ -115,10 +132,10 @@ class TriviaSession {
 					File imageFile = getRandomImageFile(nextQuestion);
 
 					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
-					this.currentQuestionHandler = QuestionHandlers.get(nextQuestion, config, listener);
+					this.currentQuestionHandler = questionHandlers.get(nextQuestion, config, listener, trivia);
 					this.currentQuestionHandler.notifyStart(this.numQuestionsAsked, this.totalQuestionsToAsk,
 							config.getDefaultTimePerQuestion(), imageFile);
-					this.timer.replaceSchedule(() -> {
+					this.scheduledTaskRunner.replaceSchedule(() -> {
 						try {
 							timeoutQuestion();
 						} catch (IllegalStateException e) {
@@ -131,7 +148,7 @@ class TriviaSession {
 				}
 			};
 		} else {
-			this.timer.cancel();
+			this.scheduledTaskRunner.cancel();
 
 			this.currentQuestionHandler = null;
 			this.state = TriviaSessionState.ENDED;
@@ -142,7 +159,7 @@ class TriviaSession {
 			};
 		}
 
-		this.delayTimer.schedule(runnable, PRE_QUESTION_DELAY_MS, TimeUnit.MILLISECONDS);
+		this.scheduledTaskRunner.replaceSchedule(runnable, PRE_QUESTION_DELAY_MS, TimeUnit.MILLISECONDS);
 	}
 
 	/**
@@ -168,7 +185,7 @@ class TriviaSession {
 			}
 
 			if (correct.get()) {
-				this.timer.cancel();
+				this.scheduledTaskRunner.cancel();
 				long incorrectAttempts = this.scorekeeper.getIncorrectAnswers(userMessage.getUserId());
 				long awardedPoints = this.scorekeeper.logCorrectAnswerAndAdvance(userMessage.getUserId());
 
@@ -202,16 +219,33 @@ class TriviaSession {
 		try {
 			if (this.state == TriviaSessionState.ENDED) {
 				return;
+			} else if (this.state == TriviaSessionState.NOT_STARTED) {
+				this.state = TriviaSessionState.ENDED;
+				return;
 			}
 
-			this.timer.cancel();
+			this.scheduledTaskRunner.cancel();
 			this.state = TriviaSessionState.ENDED;
+			
 			RoundEndEvent roundEndEvent = RoundEndEvent.builder().scores(this.scorekeeper.getScores()).build();
 			listener.onRoundEnd(roundEndEvent);
 		} finally {
 			lock.unlock();
 		}
 
+	}
+	
+	/**
+	 * Abruptly ends the session. No events are fired.
+	 */
+	void destroy() {
+		if (this.state == TriviaSessionState.ENDED) {
+			return;
+		}
+		
+		// Something went horribly wrong. Shut down everything.
+		this.scheduledTaskRunner.cancel();
+		this.state = TriviaSessionState.ENDED;
 	}
 
 	private File getRandomImageFile(QuestionTemplate q) {

@@ -9,7 +9,7 @@ import lombok.Data;
 import net.tonbot.plugin.trivia.model.QuestionTemplate;
 
 @Data
-abstract class QuestionStartEvent {
+public abstract class QuestionStartEvent {
 
 	private final QuestionTemplate question;
 

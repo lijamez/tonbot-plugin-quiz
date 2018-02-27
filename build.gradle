@@ -17,6 +17,9 @@ repositories {
     maven {
         url  "https://jitpack.io"
     }
+	maven {
+		url  "https://dl.bintray.com/ijabz/maven"
+	}
 }
 
 dependencies {
@@ -29,6 +32,10 @@ dependencies {
 	implementation group: 'com.google.guava', name: 'guava', version: '24.0-jre'
 	implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 	
+	implementation group: 'net.jthink', name: 'jaudiotagger', version: '2.2.3'
+	
+	implementation group: 'com.sedmelluq', name: 'lavaplayer', version: '1.2.51'
+	
 	compileOnly 'org.projectlombok:lombok:1.16.20'
 	
 	testImplementation group: 'junit', name: 'junit', version: '4.12'
@@ -36,4 +43,3 @@ dependencies {
 	testImplementation group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
 	testImplementation group: 'org.objenesis', name: 'objenesis', version: '2.6'
 }
-

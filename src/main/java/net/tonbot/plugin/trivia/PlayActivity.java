@@ -12,10 +12,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import net.tonbot.common.Activity;
 import net.tonbot.common.ActivityDescriptor;
@@ -26,15 +30,20 @@ import net.tonbot.plugin.trivia.model.Choice;
 import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate;
 import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.obj.ReactionEmoji;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.MissingPermissionsException;
 
 class PlayActivity implements Activity {
-
+	
+	private static final Logger LOG = LoggerFactory.getLogger(PlayActivity.class);
 	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder().route("trivia play")
 			.parameters(ImmutableList.of("<topic>", "[difficulty]"))
 			.description("Starts a round in the current channel.").build();
@@ -43,15 +52,17 @@ class PlayActivity implements Activity {
 	private final TriviaSessionManager triviaSessionManager;
 	private final BotUtils botUtils;
 	private final Color color;
+	private final AudioPlayerManager apm;
 
 	@Inject
 	public PlayActivity(IDiscordClient discordClient, TriviaSessionManager triviaSessionManager, BotUtils botUtils,
-			Color color) {
+			Color color, AudioPlayerManager apm) {
 		this.discordClient = Preconditions.checkNotNull(discordClient, "discordClient must be non-null.");
 		this.triviaSessionManager = Preconditions.checkNotNull(triviaSessionManager,
 				"triviaSessionManager must be non-null.");
 		this.botUtils = Preconditions.checkNotNull(botUtils, "botUtils must be non-null.");
 		this.color = Preconditions.checkNotNull(color, "color must be non-null.");
+		this.apm = Preconditions.checkNotNull(apm, "apm must be non-null.");
 	}
 
 	@Override
@@ -61,7 +72,7 @@ class PlayActivity implements Activity {
 
 	@Enactable
 	public void enact(MessageReceivedEvent event, PlayRequest request) {
-
+		
 		try {
 			TriviaSessionKey sessionKey = new TriviaSessionKey(event.getGuild().getLongID(),
 					event.getChannel().getLongID());
@@ -71,9 +82,27 @@ class PlayActivity implements Activity {
 
 			triviaSessionManager.createSession(sessionKey, request.getTopic(), effectiveDifficulty,
 					new TriviaListener() {
-
+				
+						private final AudioManager audioManager = new AudioManager(event.getGuild(), apm);
+				
 						@Override
 						public void onRoundStart(RoundStartEvent roundStartEvent) {
+							
+							if (roundStartEvent.isHasAudio()) {
+								IVoiceChannel voiceChannel = event.getAuthor().getVoiceStateForGuild(event.getGuild()).getChannel();
+								if (voiceChannel == null) {
+									throw new TonbotBusinessException("That topic needs audio. Please join a voice channel first.");
+								}
+								
+								try {
+									audioManager.joinVC(voiceChannel);
+								} catch (MissingPermissionsException e) {
+									throw new TonbotBusinessException("I'm not allowed to connect to that voice channel.");
+								} catch (AlreadyInAnotherVoiceChannelException e) {
+									throw new TonbotBusinessException("I can't join your voice channel because I'm connected to ``" + e.getVoiceChannel().getName() + "``");
+								}
+							}
+							
 							TriviaMetadata metadata = roundStartEvent.getTriviaMetadata();
 							String msg = String.format(
 									":checkered_flag: Starting ``%s`` on %s difficulty...",
@@ -83,6 +112,8 @@ class PlayActivity implements Activity {
 
 						@Override
 						public void onRoundEnd(RoundEndEvent roundEndEvent) {
+							audioManager.leaveVC();
+							
 							Map<Long, Long> scores = roundEndEvent.getScores();
 							EmbedBuilder eb = new EmbedBuilder();
 							eb.withColor(color);
@@ -113,6 +144,11 @@ class PlayActivity implements Activity {
 							eb.appendField("Scoreboard", scoresSb.toString(), false);
 
 							botUtils.sendEmbed(event.getChannel(), eb.build());
+						}
+						
+						@Override
+						public void onCrash() {
+							botUtils.sendMessage(event.getChannel(), "The trivia has crashed. :(");
 						}
 
 						@Override
@@ -183,14 +219,45 @@ class PlayActivity implements Activity {
 
 						@Override
 						public void onMusicIdQuestionStart(MusicIdQuestionStartEvent musicIdQuestionStartEvent) {
-							// TODO
-							botUtils.sendMessageSync(event.getChannel(), musicIdQuestionStartEvent.toString());
+							AudioTrack audioTrack = audioManager.findTrack(musicIdQuestionStartEvent.getAudioFile());
+							long maxPosition = Math.max(audioTrack.getDuration() - musicIdQuestionStartEvent.getMaxDurationMs(), 0);
+							long randomPosition = (long) (Math.random() * maxPosition);
+							audioManager.playInVC(audioTrack, randomPosition);
+							
+							EmbedBuilder eb = getQuestionEmbedBuilder(musicIdQuestionStartEvent);
+							
+							String question = null;
+							switch (musicIdQuestionStartEvent.getTagToAsk()) {
+							case TITLE:
+								question = "What is the title of this track?";
+								break;
+							case ALBUM:
+								question = "What album did this track come from?";
+								break;
+							case COMPOSER:
+								question = "Who is the composer of this track?";
+								break;
+							default:
+								question = "What is the " + musicIdQuestionStartEvent.getTagToAsk() + " of this track?";
+								break;
+							}
+							eb.withTitle("🎵 " + question);
+							
+							LOG.info(musicIdQuestionStartEvent.toString());
+							botUtils.sendEmbed(event.getChannel(), eb.build());
 						}
 
 						@Override
 						public void onMusicIdQuestionEnd(MusicIdQuestionEndEvent musicIdQuestionEndEvent) {
-							// TODO
-							botUtils.sendMessageSync(event.getChannel(), musicIdQuestionEndEvent.toString());
+							audioManager.stopPlaying();
+							
+							Win win = musicIdQuestionEndEvent.getWin().orElse(null);
+							String canonicalAnswer = musicIdQuestionEndEvent.getCanonicalAnswer();
+
+							String msg = getStandardRoundEndMessage(win,
+									win != null ? win.getWinningMessage().getMessage() : canonicalAnswer);
+
+							botUtils.sendMessageSync(event.getChannel(), msg);
 						}
 
 						@Override
@@ -289,7 +356,8 @@ class PlayActivity implements Activity {
 
 							return msg;
 						}
-
+						
+						
 					});
 		} catch (InvalidTopicException e) {
 			throw new TonbotBusinessException(

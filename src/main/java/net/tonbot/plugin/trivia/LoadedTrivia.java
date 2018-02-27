@@ -9,7 +9,7 @@ import net.tonbot.plugin.trivia.model.TriviaTopic;
 
 @Data
 @Builder
-class LoadedTrivia {
+public class LoadedTrivia {
 
 	@NonNull
 	private final File triviaTopicDir;
