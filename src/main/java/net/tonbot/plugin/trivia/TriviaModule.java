@@ -5,6 +5,8 @@ import java.io.File;
 import java.util.Random;
 import java.util.Set;
 
+import org.jaudiotagger.audio.AudioFileIO;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -61,6 +63,7 @@ class TriviaModule extends AbstractModule {
 	ObjectMapper objectMapper() {
 		ObjectMapper objMapper = new ObjectMapper();
 		objMapper.enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES);
+		objMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
 		return objMapper;
 	}
@@ -77,5 +80,11 @@ class TriviaModule extends AbstractModule {
 		AudioPlayerManager apm = new DefaultAudioPlayerManager();
 		AudioSourceManagers.registerLocalSource(apm);
 		return apm;
+	}
+	
+	@Provides
+	@Singleton
+	AudioFileIO audioFileIO() {
+		return new AudioFileIO();
 	}
 }
