@@ -38,6 +38,7 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 	
 	private final MusicIdQuestionTemplate questionTemplate;
 	private final TriviaListener listener;
+	private final FuzzyMatcher fuzzyMatcher;
 	private final TagValues tagToAsk;
 	private final AudioFile audioFile;
 	
@@ -52,6 +53,7 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 		Preconditions.checkNotNull(random, "random must be non-null.");
 		Preconditions.checkNotNull(audioFileIO, "audioFileIO must be non-null.");
 		Preconditions.checkNotNull(loadedTrivia, "loadedTrivia must be non-null.");
+		this.fuzzyMatcher = new FuzzyMatcher(loadedTrivia.getTriviaTopic().getMetadata().getSynonyms());
 		
 		this.audioFile = getAudioFile(audioFileIO, questionTemplate, loadedTrivia);
 		this.tagToAsk = getRandomUsableTagValues(audioFile, questionTemplate.getTags())
@@ -109,7 +111,7 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 	public Optional<Boolean> checkCorrectness(UserMessage userMessage) {
 		String answer = userMessage.getMessage();
 		
-		boolean answerIsCorrect = FuzzyMatcher.matches(answer, tagToAsk.getValues());
+		boolean answerIsCorrect = fuzzyMatcher.matches(answer, tagToAsk.getValues());
 		
 		return Optional.of(answerIsCorrect);
 	}

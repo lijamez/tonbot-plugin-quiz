@@ -31,7 +31,7 @@ class QuestionHandlers {
 		if (question instanceof MultipleChoiceQuestionTemplate) {
 			return new MultipleChoiceQuestionHandler((MultipleChoiceQuestionTemplate) question, config, listener);
 		} else if (question instanceof ShortAnswerQuestionTemplate) {
-			return new ShortAnswerQuestionHandler((ShortAnswerQuestionTemplate) question, listener);
+			return new ShortAnswerQuestionHandler((ShortAnswerQuestionTemplate) question, listener, loadedTrivia);
 		} else if (question instanceof MusicIdQuestionTemplate) {
 			return new MusicIdQuestionHandler((MusicIdQuestionTemplate) question, config, listener, random, audioFileIO, loadedTrivia);
 		} else {

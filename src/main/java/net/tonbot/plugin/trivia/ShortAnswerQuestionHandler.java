@@ -11,10 +11,12 @@ class ShortAnswerQuestionHandler implements QuestionHandler {
 
 	private final ShortAnswerQuestionTemplate question;
 	private final TriviaListener listener;
+	private final FuzzyMatcher fuzzyMatcher;
 
-	public ShortAnswerQuestionHandler(ShortAnswerQuestionTemplate question, TriviaListener listener) {
+	public ShortAnswerQuestionHandler(ShortAnswerQuestionTemplate question, TriviaListener listener, LoadedTrivia loadedTrivia) {
 		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
+		this.fuzzyMatcher = new FuzzyMatcher(loadedTrivia.getTriviaTopic().getMetadata().getSynonyms());
 	}
 
 	@Override
@@ -33,7 +35,7 @@ class ShortAnswerQuestionHandler implements QuestionHandler {
 	public Optional<Boolean> checkCorrectness(UserMessage userMessage) {
 		Preconditions.checkNotNull(userMessage, "userMessage must be non-null.");
 
-		return Optional.of(FuzzyMatcher.matches(userMessage.getMessage(), question.getAnswers()));
+		return Optional.of(fuzzyMatcher.matches(userMessage.getMessage(), question.getAnswers()));
 	}
 
 	@Override
