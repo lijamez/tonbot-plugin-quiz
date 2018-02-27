@@ -229,10 +229,10 @@ class PlayActivity implements Activity {
 							String question = null;
 							switch (musicIdQuestionStartEvent.getTagToAsk()) {
 							case TITLE:
-								question = "What's the title of this track?";
+								question = "What is the title of this track?";
 								break;
 							case ALBUM:
-								question = "What album did this track originally come from?";
+								question = "What album did this track come from?";
 								break;
 							case COMPOSER:
 								question = "Who is the composer of this track?";
