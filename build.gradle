@@ -17,9 +17,6 @@ repositories {
     maven {
         url  "https://jitpack.io"
     }
-	maven {
-		url  "https://dl.bintray.com/ijabz/maven"
-	}
 }
 
 dependencies {
@@ -32,7 +29,7 @@ dependencies {
 	implementation group: 'com.google.guava', name: 'guava', version: '24.0-jre'
 	implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 	
-	implementation group: 'net.jthink', name: 'jaudiotagger', version: '2.2.3'
+	implementation group: 'org.bitbucket.ijabz', name: 'jaudiotagger', version: 'v2.2.5'
 	
 	implementation group: 'com.sedmelluq', name: 'lavaplayer', version: '1.2.51'
 	
