@@ -19,7 +19,8 @@ import net.tonbot.plugin.trivia.model.QuestionTemplate;
  */
 class TriviaSession {
 
-	private static final long PRE_QUESTION_DELAY_MS = 4000;
+	private static final long ROUND_START_DELAY_MS = 10000;
+	private static final long PRE_QUESTION_DELAY_MS = 5000;
 
 	private final SessionDestroyingTriviaListener listener;
 	private final LoadedTrivia trivia;
@@ -79,6 +80,7 @@ class TriviaSession {
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(trivia.getTriviaTopic().getMetadata())
 					.difficultyName(config.getDifficultyName())
+					.startingInMs(ROUND_START_DELAY_MS)
 					.hasAudio(hasAudio)
 					.build();
 			
@@ -91,7 +93,7 @@ class TriviaSession {
 
 			// This delay prevents a race condition from occurring which causes the trivia
 			// session to treat the user's "play" command as an input in takeInput().
-			loadNextQuestionOrEnd();
+			loadNextQuestionOrEnd(ROUND_START_DELAY_MS);
 		} finally {
 			lock.unlock();
 		}
@@ -110,13 +112,13 @@ class TriviaSession {
 				currentQuestionHandler.notifyEnd(null, 0, 0);
 			}
 
-			loadNextQuestionOrEnd();
+			loadNextQuestionOrEnd(PRE_QUESTION_DELAY_MS);
 		} finally {
 			lock.unlock();
 		}
 	}
 
-	private void loadNextQuestionOrEnd() {
+	private void loadNextQuestionOrEnd(long delayMs) {
 		this.state = TriviaSessionState.LOADING_NEXT_QUESTION;
 		boolean hasNextQuestion = totalQuestionsToAsk - numQuestionsAsked > 0;
 		Runnable runnable;
@@ -159,7 +161,7 @@ class TriviaSession {
 			};
 		}
 
-		this.scheduledTaskRunner.replaceSchedule(runnable, PRE_QUESTION_DELAY_MS, TimeUnit.MILLISECONDS);
+		this.scheduledTaskRunner.replaceSchedule(runnable, delayMs, TimeUnit.MILLISECONDS);
 	}
 
 	/**
@@ -194,7 +196,7 @@ class TriviaSession {
 				this.listener.onAnswerCorrect(answerCorrectEvent);
 				this.currentQuestionHandler.notifyEnd(userMessage, awardedPoints, incorrectAttempts);
 
-				loadNextQuestionOrEnd();
+				loadNextQuestionOrEnd(PRE_QUESTION_DELAY_MS);
 			} else {
 				// This user participated, so add them to the scores map if they are not already
 				// there.

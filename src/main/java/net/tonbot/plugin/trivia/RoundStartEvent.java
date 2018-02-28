@@ -18,5 +18,7 @@ class RoundStartEvent {
 	@NonNull
 	private final String difficultyName;
 	
+	private final long startingInMs;
+	
 	private final boolean hasAudio;
 }

@@ -105,8 +105,13 @@ class PlayActivity implements Activity {
 							
 							TriviaMetadata metadata = roundStartEvent.getTriviaMetadata();
 							String msg = String.format(
-									":checkered_flag: Starting ``%s`` on %s difficulty...",
-									metadata.getName(), roundStartEvent.getDifficultyName());
+									":checkered_flag: Starting ``%s`` on %s difficulty...\n\n"
+									+ "**Submit your answer by ending it with** ``%s``\n\n"
+									+ "Starting round in %s seconds... Good luck!",
+									metadata.getName(), 
+									roundStartEvent.getDifficultyName(),
+									Constants.ANSWER_SUFFIX,
+									roundStartEvent.getStartingInMs() / 1000);
 							botUtils.sendMessageSync(event.getChannel(), msg);
 						}
 
@@ -341,8 +346,10 @@ class PlayActivity implements Activity {
 
 							eb.withColor(color);
 							eb.withFooterText(
-									String.format("First to correctly answer within %d seconds wins %d points",
-											qse.getMaxDurationMs() / 1000, qse.getQuestion().getPoints()));
+									String.format("First to correctly answer within %d seconds wins %d points. End your answer with '%s'.",
+											qse.getMaxDurationMs() / 1000, 
+											qse.getQuestion().getPoints(),
+											Constants.ANSWER_SUFFIX));
 
 							eb.withAuthorName(String.format("Question %d of %d", qse.getQuestionNumber(),
 									qse.getTotalQuestions()));

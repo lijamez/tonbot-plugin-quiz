@@ -12,8 +12,6 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedE
 import sx.blah.discord.handle.obj.IMessage;
 
 class DiscordMessageEventListener {
-
-	public static final String ANSWER_SUFFIX = "!";
 	
 	private final TriviaSessionManager triviaSessionManager;
 
@@ -35,11 +33,11 @@ class DiscordMessageEventListener {
 		String messageContent = messageReceivedEvent.getMessage().getContent();
 		
 		// Ignore messages without answer suffix.
-		if (messageContent.length() > 1 && !StringUtils.endsWith(messageContent, ANSWER_SUFFIX)) {
+		if (messageContent.length() > 1 && !StringUtils.endsWith(messageContent, Constants.ANSWER_SUFFIX)) {
 			return;
 		}
 		
-		String userAnswer = StringUtils.substring(messageContent, 0, messageContent.length() - ANSWER_SUFFIX.length());
+		String userAnswer = StringUtils.substring(messageContent, 0, messageContent.length() - Constants.ANSWER_SUFFIX.length());
 		
 		if (StringUtils.isEmpty(userAnswer)) {
 			return;
