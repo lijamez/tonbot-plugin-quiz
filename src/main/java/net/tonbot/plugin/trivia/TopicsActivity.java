@@ -15,8 +15,11 @@ import sx.blah.discord.util.EmbedBuilder;
 
 class TopicsActivity implements Activity {
 
-	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder().route("trivia topics")
-			.parameters(ImmutableList.of()).description("Displays a list of trivia topics.").build();
+	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder()
+			.route("trivia topics")
+			.parameters(ImmutableList.of())
+			.description("Displays a list of trivia topics.")
+			.build();
 
 	private final TriviaLibrary triviaLibrary;
 	private final BotUtils botUtils;

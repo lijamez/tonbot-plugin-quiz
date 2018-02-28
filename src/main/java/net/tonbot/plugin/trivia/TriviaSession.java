@@ -26,7 +26,7 @@ class TriviaSession {
 
 	private static final long ROUND_START_DELAY_MS = 10000;
 	private static final long PRE_QUESTION_DELAY_MS = 5000;
-
+	
 	private final SessionDestroyingTriviaListener listener;
 	private final LoadedTrivia trivia;
 	private final List<QuestionTemplate> availableQuestionTemplates;
@@ -51,7 +51,7 @@ class TriviaSession {
 			TriviaConfiguration config, 
 			Random random, 
 			QuestionHandlers questionHandlers) {
-
+		
 		Preconditions.checkNotNull(listener, "listener must be non-null.");
 		this.listener = new SessionDestroyingTriviaListener(listener, this);
 		this.trivia = Preconditions.checkNotNull(trivia, "trivia must be non-null.");
@@ -225,7 +225,7 @@ class TriviaSession {
 	 * Ends the session nicely, which fires an onRoundEnd event. 
 	 * No-op if this session has already ended.
 	 */
-	public void end() {
+	void end() {
 		lock.lock();
 		try {
 			if (this.state == TriviaSessionState.ENDED) {
@@ -237,7 +237,7 @@ class TriviaSession {
 			
 			this.scorekeeper.endQuestion();
 
-			this.scheduledTaskRunner.cancel();
+			this.scheduledTaskRunner.shutdownNow();
 			this.state = TriviaSessionState.ENDED;
 			
 			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
@@ -261,7 +261,7 @@ class TriviaSession {
 		}
 		
 		// Something went horribly wrong. Shut down everything.
-		this.scheduledTaskRunner.cancel();
+		this.scheduledTaskRunner.shutdownNow();
 		this.state = TriviaSessionState.ENDED;
 	}
 

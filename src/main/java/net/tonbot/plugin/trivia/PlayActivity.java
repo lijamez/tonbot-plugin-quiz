@@ -47,9 +47,11 @@ import sx.blah.discord.util.RequestBuilder;
 class PlayActivity implements Activity {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(PlayActivity.class);
-	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder().route("trivia play")
+	private static final ActivityDescriptor ACTIVITY_DESCRIPTOR = ActivityDescriptor.builder()
+			.route("trivia play")
 			.parameters(ImmutableList.of("<topic>", "[difficulty]"))
-			.description("Starts a round in the current channel.").build();
+			.description("Starts a round in the current channel.")
+			.build();
 
 	private final IDiscordClient discordClient;
 	private final TriviaSessionManager triviaSessionManager;

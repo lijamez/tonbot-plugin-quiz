@@ -4,19 +4,27 @@ import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 class ScheduledTaskRunner {
 
+	private static Logger LOG = LoggerFactory.getLogger(ScheduledTaskRunner.class);
+	
 	private ScheduledExecutorService executorService;
 	private ScheduledFuture<?> scheduledTaskFuture;
 	private ReentrantLock lock;
 
 	public ScheduledTaskRunner() {
-		this.executorService = Executors.newScheduledThreadPool(1);
+		ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("Scheduled Task Runner %d").build();
+		this.executorService = Executors.newScheduledThreadPool(1, tf);
 		this.lock = new ReentrantLock();
 	}
 
@@ -68,5 +76,13 @@ class ScheduledTaskRunner {
 		} finally {
 			lock.unlock();
 		}
+	}
+	
+	/**
+	 * Attempts to stop all actively executing tasks, and prevent queued tasks from executing.
+	 */
+	public void shutdownNow() {
+		this.executorService.shutdownNow();
+		LOG.info("Shutting down ScheduledTaskRunner.");
 	}
 }

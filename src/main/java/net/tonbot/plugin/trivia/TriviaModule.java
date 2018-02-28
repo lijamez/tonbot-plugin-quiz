@@ -48,8 +48,8 @@ class TriviaModule extends AbstractModule {
 
 	@Provides
 	@Singleton
-	Set<Activity> activities(PlayActivity playActivity, TopicsActivity listActivity) {
-		return ImmutableSet.of(playActivity, listActivity);
+	Set<Activity> activities(PlayActivity playActivity, TopicsActivity listActivity, StopActivity stopActivity) {
+		return ImmutableSet.of(playActivity, listActivity, stopActivity);
 	}
 
 	@Provides
