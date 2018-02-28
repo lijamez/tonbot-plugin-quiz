@@ -165,15 +165,27 @@ class PlayActivity implements Activity {
 							MultipleChoiceQuestionTemplate mcQuestion = multipleChoiceQuestionStartEvent
 									.getMultipleChoiceQuestion();
 							eb.withColor(color);
-							eb.withTitle(mcQuestion.getQuestion());
+							
+							String questionText = mcQuestion.getQuestion();
+							
+							int newlineIndex = questionText.indexOf('\n');
+							if (newlineIndex > 0) {
+								String mainQuestion = questionText.substring(0, newlineIndex);
+								String extra = questionText.substring(newlineIndex, questionText.length());
+								eb.withTitle(mainQuestion);
+								eb.withDescription(extra);
+							} else {
+								eb.withTitle(mcQuestion.getQuestion());
+							}
+							
 
-							StringBuilder sb = new StringBuilder();
+							StringBuilder choicesSb = new StringBuilder();
 							List<Choice> choices = multipleChoiceQuestionStartEvent.getChoices();
 							for (int i = 0; i < choices.size(); i++) {
 								Choice choice = choices.get(i);
-								sb.append(String.format("``%d``: %s\n", i, choice.getValue()));
+								choicesSb.append(String.format("``%d``: %s\n", i, choice.getValue()));
 							}
-							eb.withDescription(sb.toString());
+							eb.appendField("--------------------", choicesSb.toString(), false);
 
 							sendQuestionEmbed(eb, multipleChoiceQuestionStartEvent);
 						}
