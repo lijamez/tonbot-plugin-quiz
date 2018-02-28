@@ -121,31 +121,38 @@ class PlayActivity implements Activity {
 
 						@Override
 						public void onRoundEnd(RoundEndEvent roundEndEvent) {
+							LOG.info("Round has ended.");
 							audioManager.leaveVC();
 							purgeDeletableMessagesAsync();
 							
-							Map<Long, Long> scores = roundEndEvent.getScores();
+							Map<Long, Record> scorekeepingRecords = roundEndEvent.getScorekeepingRecords();
 							EmbedBuilder eb = new EmbedBuilder();
 							eb.withColor(color);
 							eb.withTitle(":triangular_flag_on_post: Round finished!");
 
-							StringBuilder scoresSb = new StringBuilder();
+							eb.appendField("Topic", roundEndEvent.getLoadedTrivia().getTriviaTopic().getMetadata().getName(), true);
+							eb.appendField("Difficulty", roundEndEvent.getTriviaConfig().getDifficultyName(), true);
 							
-							List<Entry<Long, Long>> rankings = scores.entrySet().stream()
-								.sorted((x, y) -> {
-									return (int) (y.getValue() - x.getValue());
-								})
-								.collect(Collectors.toList());
+							StringBuilder scoresSb = new StringBuilder();
 
-							if (scores.isEmpty()) {
+							if (scorekeepingRecords.isEmpty()) {
 								scoresSb.append("No participants :frowning:");
 							} else {
+								List<Entry<Long, Record>> rankings = scorekeepingRecords.entrySet().stream()
+										.sorted((x, y) -> {
+											Record xRecord = x.getValue();
+											Record yRecord = y.getValue();
+											
+											return (int) (yRecord.getTotalEarnedScore() - xRecord.getTotalEarnedScore());
+										})
+										.collect(Collectors.toList());
+								
 								for (int rank = 0; rank < rankings.size(); rank++) {
-									Entry<Long, Long> entry = rankings.get(rank);
+									Entry<Long, Record> entry = rankings.get(rank);
+									Record record = entry.getValue();
 									
 									IUser user = discordClient.fetchUser(entry.getKey());
 									String displayName = user.getDisplayName(event.getGuild());
-									long score = entry.getValue();
 									
 									if (rank == 0) {
 										scoresSb.append(":first_place: ");
@@ -153,8 +160,16 @@ class PlayActivity implements Activity {
 										scoresSb.append(":second_place: ");
 									} else if (rank == 2) {
 										scoresSb.append(":third_place: ");
+									} else {
+										scoresSb.append(":white_small_square: ");
 									}
-									scoresSb.append(String.format("%s: %d points\n", displayName, score));
+									
+									scoresSb.append(String.format("%s: %d/%d points (%d/%d Correct)\n", 
+											displayName, 
+											record.getTotalEarnedScore(), 
+											record.getTotalPossibleScore(), 
+											record.getTotalCorrectlyAnsweredQuestions(), 
+											record.getTotalQuestions()));
 								}
 							}
 

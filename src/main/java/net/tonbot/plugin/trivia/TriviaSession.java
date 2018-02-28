@@ -8,6 +8,9 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import net.tonbot.common.TonbotBusinessException;
@@ -18,6 +21,8 @@ import net.tonbot.plugin.trivia.model.QuestionTemplate;
  * This class is thread safe.
  */
 class TriviaSession {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(TriviaSession.class);
 
 	private static final long ROUND_START_DELAY_MS = 10000;
 	private static final long PRE_QUESTION_DELAY_MS = 5000;
@@ -119,6 +124,8 @@ class TriviaSession {
 	}
 
 	private void loadNextQuestionOrEnd(long delayMs) {
+		this.scorekeeper.endQuestion();
+		
 		this.state = TriviaSessionState.LOADING_NEXT_QUESTION;
 		boolean hasNextQuestion = totalQuestionsToAsk - numQuestionsAsked > 0;
 		Runnable runnable;
@@ -143,6 +150,8 @@ class TriviaSession {
 						} catch (IllegalStateException e) {
 							// Timeout call was a bit late, and the game must've ended.
 							// Hence this is ignorable.
+						} catch (Exception e) {
+							LOG.error("Question timeout task has unexpectedly thrown an exception.", e);
 						}
 					}, config.getDefaultTimePerQuestion(), TimeUnit.MILLISECONDS);
 				} finally {
@@ -150,14 +159,13 @@ class TriviaSession {
 				}
 			};
 		} else {
-			this.scheduledTaskRunner.cancel();
-
-			this.currentQuestionHandler = null;
-			this.state = TriviaSessionState.ENDED;
-
 			runnable = () -> {
-				RoundEndEvent roundEndEvent = RoundEndEvent.builder().scores(scorekeeper.getScores()).build();
-				this.listener.onRoundEnd(roundEndEvent);
+				try {
+					end();
+				} catch (Exception e) {
+					LOG.error("Round ending task has unexpectedly thrown an exception.", e);
+				}
+				
 			};
 		}
 
@@ -188,13 +196,14 @@ class TriviaSession {
 
 			if (correct.get()) {
 				this.scheduledTaskRunner.cancel();
-				long incorrectAttempts = this.scorekeeper.getIncorrectAnswers(userMessage.getUserId());
-				long awardedPoints = this.scorekeeper.logCorrectAnswerAndAdvance(userMessage.getUserId());
+				long incorrectAnswers = this.scorekeeper.getQuestionRecord(userMessage.getUserId())
+						.getIncorrectAnswers();
+				long awardedPoints = this.scorekeeper.logCorrectAnswer(userMessage.getUserId());
 
 				AnswerCorrectEvent answerCorrectEvent = AnswerCorrectEvent.builder()
 						.messageId(userMessage.getMessageId()).build();
 				this.listener.onAnswerCorrect(answerCorrectEvent);
-				this.currentQuestionHandler.notifyEnd(userMessage, awardedPoints, incorrectAttempts);
+				this.currentQuestionHandler.notifyEnd(userMessage, awardedPoints, incorrectAnswers);
 
 				loadNextQuestionOrEnd(PRE_QUESTION_DELAY_MS);
 			} else {
@@ -213,8 +222,8 @@ class TriviaSession {
 	}
 
 	/**
-	 * Ends the session, which fires an onRoundEnd event. No-op if this session has
-	 * already ended.
+	 * Ends the session nicely, which fires an onRoundEnd event. 
+	 * No-op if this session has already ended.
 	 */
 	public void end() {
 		lock.lock();
@@ -225,16 +234,22 @@ class TriviaSession {
 				this.state = TriviaSessionState.ENDED;
 				return;
 			}
+			
+			this.scorekeeper.endQuestion();
 
 			this.scheduledTaskRunner.cancel();
 			this.state = TriviaSessionState.ENDED;
 			
-			RoundEndEvent roundEndEvent = RoundEndEvent.builder().scores(this.scorekeeper.getScores()).build();
+			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
+					.scorekeepingRecords(this.scorekeeper.getRecords())
+					.loadedTrivia(trivia)
+					.triviaConfig(config)
+					.build();
+			
 			listener.onRoundEnd(roundEndEvent);
 		} finally {
 			lock.unlock();
 		}
-
 	}
 	
 	/**

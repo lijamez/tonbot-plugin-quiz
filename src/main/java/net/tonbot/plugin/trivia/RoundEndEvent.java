@@ -11,8 +11,14 @@ import lombok.NonNull;
 class RoundEndEvent {
 
 	/**
-	 * A map from user ID to score.
+	 * A map from user ID to their full scorekeeping record.
 	 */
 	@NonNull
-	private final Map<Long, Long> scores;
+	private final Map<Long, Record> scorekeepingRecords;
+	
+	@NonNull
+	private final LoadedTrivia loadedTrivia;
+	
+	@NonNull
+	private final TriviaConfiguration triviaConfig;
 }
