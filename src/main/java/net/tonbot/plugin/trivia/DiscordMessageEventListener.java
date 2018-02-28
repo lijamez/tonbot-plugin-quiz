@@ -34,7 +34,7 @@ class DiscordMessageEventListener {
 		IMessage message = messageReceivedEvent.getMessage();
 		String messageContent = messageReceivedEvent.getMessage().getContent();
 		
-		// Ignore messages without answer prefix.
+		// Ignore messages without answer suffix.
 		if (messageContent.length() > 1 && !StringUtils.endsWith(messageContent, ANSWER_SUFFIX)) {
 			return;
 		}
