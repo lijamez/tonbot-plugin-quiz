@@ -116,7 +116,8 @@ class PlayActivity implements Activity {
 									roundStartEvent.getDifficultyName(),
 									Constants.ANSWER_SUFFIX,
 									roundStartEvent.getStartingInMs() / 1000);
-							botUtils.sendMessageSync(event.getChannel(), msg);
+							IMessage message = botUtils.sendMessageSync(event.getChannel(), msg);
+							deletableMessages.add(message);
 						}
 
 						@Override
