@@ -5,10 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
@@ -40,6 +42,7 @@ import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
+import sx.blah.discord.util.RequestBuilder;
 
 class PlayActivity implements Activity {
 	
@@ -84,6 +87,7 @@ class PlayActivity implements Activity {
 					new TriviaListener() {
 				
 						private final AudioManager audioManager = new AudioManager(event.getGuild(), apm);
+						private final ConcurrentLinkedQueue<IMessage> deletableMessages = new ConcurrentLinkedQueue<>();
 				
 						@Override
 						public void onRoundStart(RoundStartEvent roundStartEvent) {
@@ -118,6 +122,7 @@ class PlayActivity implements Activity {
 						@Override
 						public void onRoundEnd(RoundEndEvent roundEndEvent) {
 							audioManager.leaveVC();
+							purgeDeletableMessagesAsync();
 							
 							Map<Long, Long> scores = roundEndEvent.getScores();
 							EmbedBuilder eb = new EmbedBuilder();
@@ -133,7 +138,7 @@ class PlayActivity implements Activity {
 								.collect(Collectors.toList());
 
 							if (scores.isEmpty()) {
-								scoresSb.append("No participants :(");
+								scoresSb.append("No participants :frowning:");
 							} else {
 								for (int rank = 0; rank < rankings.size(); rank++) {
 									Entry<Long, Long> entry = rankings.get(rank);
@@ -155,7 +160,8 @@ class PlayActivity implements Activity {
 
 							eb.appendField("Scoreboard", scoresSb.toString(), false);
 
-							botUtils.sendEmbed(event.getChannel(), eb.build());
+							IMessage message = botUtils.sendEmbedSync(event.getChannel(), eb.build());
+							deletableMessages.add(message);
 						}
 						
 						@Override
@@ -166,6 +172,8 @@ class PlayActivity implements Activity {
 						@Override
 						public void onMultipleChoiceQuestionStart(
 								MultipleChoiceQuestionStartEvent multipleChoiceQuestionStartEvent) {
+							purgeDeletableMessagesAsync();
+							
 							EmbedBuilder eb = getQuestionEmbedBuilder(multipleChoiceQuestionStartEvent);
 							MultipleChoiceQuestionTemplate mcQuestion = multipleChoiceQuestionStartEvent
 									.getMultipleChoiceQuestion();
@@ -192,23 +200,28 @@ class PlayActivity implements Activity {
 							}
 							eb.appendField("--------------------", choicesSb.toString(), false);
 
-							sendQuestionEmbed(eb, multipleChoiceQuestionStartEvent);
+							IMessage message = sendQuestionEmbed(eb, multipleChoiceQuestionStartEvent);
+							deletableMessages.add(message);
 						}
 
 						@Override
 						public void onMultipleChoiceQuestionEnd(
 								MultipleChoiceQuestionEndEvent multipleChoiceQuestionEndEvent) {
+							
 							Win win = multipleChoiceQuestionEndEvent.getWin().orElse(null);
 							Choice correctChoice = multipleChoiceQuestionEndEvent.getCorrectChoice();
 
 							String msg = getStandardRoundEndMessage(win, correctChoice.getValue());
 
-							botUtils.sendMessageSync(event.getChannel(), msg);
+							IMessage message = botUtils.sendMessageSync(event.getChannel(), msg);
+							deletableMessages.add(message);
 						}
 
 						@Override
 						public void onShortAnswerQuestionStart(
 								ShortAnswerQuestionStartEvent shortAnswerQuestionStartEvent) {
+							purgeDeletableMessagesAsync();
+							
 							EmbedBuilder eb = getQuestionEmbedBuilder(shortAnswerQuestionStartEvent);
 							ShortAnswerQuestionTemplate saQuestion = shortAnswerQuestionStartEvent
 									.getShortAnswerQuestion();
@@ -227,22 +240,27 @@ class PlayActivity implements Activity {
 								eb.withTitle(saQuestion.getQuestion());
 							}
 
-							sendQuestionEmbed(eb, shortAnswerQuestionStartEvent);
+							IMessage message = sendQuestionEmbed(eb, shortAnswerQuestionStartEvent);
+							deletableMessages.add(message);
 						}
 
 						@Override
 						public void onShortAnswerQuestionEnd(ShortAnswerQuestionEndEvent shortAnswerQuestionEndEvent) {
+							
 							Win win = shortAnswerQuestionEndEvent.getWin().orElse(null);
 							String acceptableAnswer = shortAnswerQuestionEndEvent.getAcceptableAnswer();
 
 							String msg = getStandardRoundEndMessage(win,
 									win != null ? win.getWinningMessage().getMessage() : acceptableAnswer);
 
-							botUtils.sendMessageSync(event.getChannel(), msg);
+							IMessage message = botUtils.sendMessageSync(event.getChannel(), msg);
+							deletableMessages.add(message);
 						}
 
 						@Override
 						public void onMusicIdQuestionStart(MusicIdQuestionStartEvent musicIdQuestionStartEvent) {
+							purgeDeletableMessagesAsync();
+							
 							AudioTrack audioTrack = audioManager.findTrack(musicIdQuestionStartEvent.getAudioFile());
 							long maxPosition = Math.max(audioTrack.getDuration() - musicIdQuestionStartEvent.getMaxDurationMs(), 0);
 							long randomPosition = (long) (Math.random() * maxPosition);
@@ -268,7 +286,8 @@ class PlayActivity implements Activity {
 							eb.withTitle("🎵 " + question);
 							
 							LOG.info(musicIdQuestionStartEvent.toString());
-							botUtils.sendEmbed(event.getChannel(), eb.build());
+							IMessage message = botUtils.sendEmbedSync(event.getChannel(), eb.build());
+							deletableMessages.add(message);
 						}
 
 						@Override
@@ -281,7 +300,8 @@ class PlayActivity implements Activity {
 							String msg = getStandardRoundEndMessage(win,
 									win != null ? win.getWinningMessage().getMessage() : canonicalAnswer);
 
-							botUtils.sendMessageSync(event.getChannel(), msg);
+							IMessage message = botUtils.sendMessageSync(event.getChannel(), msg);
+							deletableMessages.add(message);
 						}
 
 						@Override
@@ -290,6 +310,8 @@ class PlayActivity implements Activity {
 							if (message != null) {
 								message.addReaction(ReactionEmoji.of("✅"));
 							}
+							
+							deletableMessages.add(message);
 						}
 
 						@Override
@@ -297,6 +319,37 @@ class PlayActivity implements Activity {
 							IMessage message = discordClient.getMessageByID(answerIncorrectEvent.getMessageId());
 							if (message != null) {
 								message.addReaction(ReactionEmoji.of("❌"));
+							}
+							
+							deletableMessages.add(message);
+						}
+						
+						private void purgeDeletableMessagesAsync() {
+							int elementsToTake = deletableMessages.size();
+							
+							if (elementsToTake > 0) {
+								List<IMessage> messagesToDelete = new ArrayList<>();
+								for (int i = 0; i < elementsToTake; i++) {
+									messagesToDelete.add(deletableMessages.poll());
+								}
+								
+								new RequestBuilder(discordClient)
+								.shouldBufferRequests(true)
+								.setAsync(true)
+								.doAction(() -> {
+									try {
+										event.getChannel().bulkDelete(messagesToDelete);
+									} catch (MissingPermissionsException e) {
+										// Bot doesn't have permissions to delete messages, which means
+										// the channel will get a bit spammy (which might be totally ok with the server admin)
+										// but it's not a real "error". Hence, just log it.
+										LOG.warn("Couldn't purge trivia messages from channel '{}' in guild '{}' due to lack of permissions.", 
+												event.getChannel().getName(),
+												event.getGuild().getName());
+									}
+									
+									return true;
+								}).execute();
 							}
 						}
 
@@ -308,8 +361,9 @@ class PlayActivity implements Activity {
 						 *            The {@link EmbedBuilder}. Non-null.
 						 * @param qse
 						 *            The {@link QuestionStartEvent}. Non-null.
+						 * @return The sent embed message.
 						 */
-						private void sendQuestionEmbed(EmbedBuilder eb, QuestionStartEvent qse) {
+						private IMessage sendQuestionEmbed(EmbedBuilder eb, QuestionStartEvent qse) {
 							File imageFile = qse.getImage().orElse(null);
 
 							if (imageFile != null) {
@@ -322,14 +376,14 @@ class PlayActivity implements Activity {
 
 								try {
 									FileInputStream fis = new FileInputStream(imageFile);
-									botUtils.sendEmbed(event.getChannel(), eb.build(), fis, discordFriendlyFileName);
+									return botUtils.sendEmbedSync(event.getChannel(), eb.build(), fis, discordFriendlyFileName);
 								} catch (FileNotFoundException e) {
 									// Should never happen because TriviaLibrary performs a file existence check.
 									throw new UncheckedIOException(e);
 								}
 
 							} else {
-								botUtils.sendEmbed(event.getChannel(), eb.build());
+								return botUtils.sendEmbedSync(event.getChannel(), eb.build());
 							}
 						}
 
