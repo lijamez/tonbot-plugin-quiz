@@ -7,13 +7,14 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import net.tonbot.common.MessageNormalizer;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IMessage;
 
 class DiscordMessageEventListener {
 
+	public static final String ANSWER_SUFFIX = "!";
+	
 	private final TriviaSessionManager triviaSessionManager;
 
 	@Inject
@@ -29,6 +30,20 @@ class DiscordMessageEventListener {
 		if (messageReceivedEvent.getAuthor().isBot()) {
 			return;
 		}
+		
+		IMessage message = messageReceivedEvent.getMessage();
+		String messageContent = messageReceivedEvent.getMessage().getContent();
+		
+		// Ignore messages without answer prefix.
+		if (messageContent.length() > 1 && !StringUtils.endsWith(messageContent, ANSWER_SUFFIX)) {
+			return;
+		}
+		
+		String userAnswer = StringUtils.substring(messageContent, 0, messageContent.length() - ANSWER_SUFFIX.length());
+		
+		if (StringUtils.isEmpty(userAnswer)) {
+			return;
+		}
 
 		TriviaSessionKey sessionKey = new TriviaSessionKey(messageReceivedEvent.getGuild().getLongID(),
 				messageReceivedEvent.getChannel().getLongID());
@@ -39,21 +54,9 @@ class DiscordMessageEventListener {
 		}
 
 		TriviaSession session = optSession.get();
-		IMessage message = messageReceivedEvent.getMessage();
 
-		String normalizedMessageContent = normalize(message.getContent());
-
-		if (StringUtils.isBlank(normalizedMessageContent)) {
-			return;
-		}
-
-		UserMessage userMessage = UserMessage.builder().message(normalizedMessageContent).messageId(message.getLongID())
+		UserMessage userMessage = UserMessage.builder().message(userAnswer).messageId(message.getLongID())
 				.userId(messageReceivedEvent.getAuthor().getLongID()).build();
 		session.takeInput(userMessage);
-	}
-
-	private String normalize(String message) {
-		return MessageNormalizer.removeEmojis(message).trim();
-
 	}
 }
