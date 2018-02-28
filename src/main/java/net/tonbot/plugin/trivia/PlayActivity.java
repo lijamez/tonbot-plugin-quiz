@@ -120,22 +120,29 @@ class PlayActivity implements Activity {
 							eb.withTitle(":triangular_flag_on_post: Round finished!");
 
 							StringBuilder scoresSb = new StringBuilder();
+							
+							List<Entry<Long, Long>> rankings = scores.entrySet().stream()
+								.sorted((x, y) -> {
+									return (int) (y.getValue() - x.getValue());
+								})
+								.collect(Collectors.toList());
+
 							if (scores.isEmpty()) {
 								scoresSb.append("No participants :(");
 							} else {
-								List<Entry<Long, Long>> ranking = scores.entrySet().stream().sorted((x, y) -> {
-									return (int) (y.getValue() - x.getValue());
-								}).collect(Collectors.toList());
-
-								long highestScore = ranking.size() > 0 ? ranking.get(0).getValue() : 0;
-
-								for (Entry<Long, Long> entry : ranking) {
+								for (int rank = 0; rank < rankings.size(); rank++) {
+									Entry<Long, Long> entry = rankings.get(rank);
+									
 									IUser user = discordClient.fetchUser(entry.getKey());
 									String displayName = user.getDisplayName(event.getGuild());
 									long score = entry.getValue();
-
-									if (score == highestScore) {
-										scoresSb.append(":trophy: ");
+									
+									if (rank == 0) {
+										scoresSb.append(":first_place: ");
+									} else if (rank == 1) {
+										scoresSb.append(":second_place: ");
+									} else if (rank == 2) {
+										scoresSb.append(":third_place: ");
 									}
 									scoresSb.append(String.format("%s: %d points\n", displayName, score));
 								}
