@@ -85,7 +85,7 @@ class PlayActivity implements Activity {
 			Difficulty effectiveDifficulty = request.getDifficulty() != null ? request.getDifficulty()
 					: Difficulty.MEDIUM;
 
-			triviaSessionManager.createSession(sessionKey, request.getTopic(), effectiveDifficulty,
+			triviaSessionManager.tryCreateSession(sessionKey, request.getTopic(), effectiveDifficulty,
 					new TriviaListener() {
 				
 						private final AudioManager audioManager = new AudioManager(event.getGuild(), apm);
@@ -460,6 +460,8 @@ class PlayActivity implements Activity {
 		} catch (InvalidTopicException e) {
 			throw new TonbotBusinessException(
 					"Invalid topic name. Use the ``trivia topics`` command to see the available topics.");
+		} catch (ExistingSessionException e) {
+			throw new TonbotBusinessException("Please wait for the current round to end before starting another.");
 		}
 	}
 }

@@ -2,6 +2,7 @@ package net.tonbot.plugin.trivia;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -45,11 +46,9 @@ class TriviaSessionManager {
 		}
 		
 	}
-
+	
 	/**
-	 * Creates a trivia session for the given guild. Any existing sessions will be
-	 * replaced, but not before firing their RoundEndEvent.
-	 * 
+	 * Attempts to create a session, if there is currently no ongoing session for the given key.
 	 * @param sessionKey
 	 *            {@link TriviaSessionKey}. Non-null.
 	 * @param triviaTopicName
@@ -59,9 +58,11 @@ class TriviaSessionManager {
 	 *            The {@link Difficulty.} Non-null.
 	 * @return The new {@link TriviaSession}.
 	 * @throws InvalidTopicException
-	 *             if the specified trivia topic is not valid.
+	 *            if the specified trivia topic is not valid.
+	 * @throws ExistingSessionException
+	 * 			 if the session already exists.
 	 */
-	public synchronized TriviaSession createSession(
+	public TriviaSession tryCreateSession(
 			TriviaSessionKey sessionKey, 
 			String triviaTopicName, 
 			Difficulty difficulty,
@@ -69,26 +70,28 @@ class TriviaSessionManager {
 		Preconditions.checkNotNull(sessionKey, "sessionKey must be non-null.");
 		Preconditions.checkNotNull(triviaTopicName, "triviaTopicName must be non-null.");
 		Preconditions.checkNotNull(difficulty, "difficulty must be non-null.");
-
-		LoadedTrivia loadedTrivia = triviaLibrary.getTrivia(triviaTopicName)
-				.orElseThrow(() -> new InvalidTopicException("Trivia topic " + triviaTopicName + " is not valid."));
-		TriviaConfiguration triviaConfig = getConfigFor(loadedTrivia.getTriviaTopic(), difficulty);
-		TriviaSession triviaSession = new TriviaSession(listener, loadedTrivia, triviaConfig, random, questionHandlers);
 		
 		lock.writeLock().lock();
 		try {
-			TriviaSession oldSession = this.sessions.put(sessionKey, triviaSession);
-
-			if (oldSession != null) {
-				oldSession.end();
+			TriviaSession currentSession = this.sessions.get(sessionKey);
+			
+			if (currentSession != null) {
+				throw new ExistingSessionException("A session already exists for key " + sessionKey);
 			}
+			
+			LoadedTrivia loadedTrivia = triviaLibrary.getTrivia(triviaTopicName)
+					.orElseThrow(() -> new InvalidTopicException("Trivia topic " + triviaTopicName + " is not valid."));
+			TriviaConfiguration triviaConfig = getConfigFor(loadedTrivia.getTriviaTopic(), difficulty);
+			
+			TriviaSession triviaSession = new TriviaSession(this, listener, loadedTrivia, triviaConfig, random, questionHandlers);
+			this.sessions.put(sessionKey, triviaSession);
 
 			triviaSession.start();
+			
+			return triviaSession;
 		} finally {
 			lock.writeLock().unlock();
 		}
-
-		return triviaSession;
 	}
 	
 	/**
@@ -110,6 +113,25 @@ class TriviaSessionManager {
 			}
 			
 			return Optional.ofNullable(session);
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
+	/**
+	 * A {@link TriviaSession} is expected to call this method when it is done so that it can be removed from the manager.
+	 * @param session The session that has ended.
+	 */
+	void sessionHasEnded(TriviaSession session) {
+		lock.writeLock().lock();
+		try {
+			Optional<Entry<TriviaSessionKey, TriviaSession>> entry = this.sessions.entrySet().stream()
+				.filter(e -> e.getValue() == session)
+				.findAny();
+			
+			if (entry.isPresent()) {
+				this.sessions.remove(entry.get().getKey());
+			}
 		} finally {
 			lock.writeLock().unlock();
 		}

@@ -27,6 +27,8 @@ class TriviaSession {
 	private static final long ROUND_START_DELAY_MS = 10000;
 	private static final long PRE_QUESTION_DELAY_MS = 5000;
 	
+	private final TriviaSessionManager triviaSessionManager;
+	
 	private final SessionDestroyingTriviaListener listener;
 	private final LoadedTrivia trivia;
 	private final List<QuestionTemplate> availableQuestionTemplates;
@@ -46,12 +48,14 @@ class TriviaSession {
 	private ReentrantLock lock;
 
 	public TriviaSession(
+			TriviaSessionManager triviaSessionManager,
 			TriviaListener listener, 
 			LoadedTrivia trivia, 
 			TriviaConfiguration config, 
 			Random random, 
 			QuestionHandlers questionHandlers) {
 		
+		this.triviaSessionManager = Preconditions.checkNotNull(triviaSessionManager, "triviaSessionManager must be non-null.");
 		Preconditions.checkNotNull(listener, "listener must be non-null.");
 		this.listener = new SessionDestroyingTriviaListener(listener, this);
 		this.trivia = Preconditions.checkNotNull(trivia, "trivia must be non-null.");
@@ -237,8 +241,10 @@ class TriviaSession {
 			
 			this.scorekeeper.endQuestion();
 
-			this.scheduledTaskRunner.shutdownNow();
+			this.scheduledTaskRunner.cancel();
 			this.state = TriviaSessionState.ENDED;
+
+			triviaSessionManager.sessionHasEnded(this);
 			
 			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
 					.scorekeepingRecords(this.scorekeeper.getRecords())
@@ -263,6 +269,8 @@ class TriviaSession {
 		// Something went horribly wrong. Shut down everything.
 		this.scheduledTaskRunner.shutdownNow();
 		this.state = TriviaSessionState.ENDED;
+		
+		triviaSessionManager.sessionHasEnded(this);
 	}
 
 	private File getRandomImageFile(QuestionTemplate q) {
