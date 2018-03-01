@@ -326,7 +326,7 @@ class PlayActivity implements Activity {
 						public void onAnswerCorrect(AnswerCorrectEvent answerCorrectEvent) {
 							IMessage message = discordClient.getMessageByID(answerCorrectEvent.getMessageId());
 							if (message != null) {
-								message.addReaction(ReactionEmoji.of("✅"));
+								react(message, ReactionEmoji.of("✅"));
 							}
 							
 							deletableMessages.add(message);
@@ -336,10 +336,23 @@ class PlayActivity implements Activity {
 						public void onAnswerIncorrect(AnswerIncorrectEvent answerIncorrectEvent) {
 							IMessage message = discordClient.getMessageByID(answerIncorrectEvent.getMessageId());
 							if (message != null) {
-								message.addReaction(ReactionEmoji.of("❌"));
+								react(message, ReactionEmoji.of("❌"));
 							}
 							
 							deletableMessages.add(message);
+						}
+						
+						private void react(IMessage message, ReactionEmoji reactionEmoji) {
+							// We don't need to buffer the requests since these reactions are relatively unimportant
+							// and can be skipped if we are being rate limited.
+							new RequestBuilder(discordClient)
+								.shouldBufferRequests(true)
+								.setAsync(true)
+								.doAction(() -> {
+									message.addReaction(reactionEmoji);
+									return true;
+								})
+								.execute();
 						}
 						
 						private void purgeDeletableMessagesAsync() {
@@ -352,22 +365,23 @@ class PlayActivity implements Activity {
 								}
 								
 								new RequestBuilder(discordClient)
-								.shouldBufferRequests(true)
-								.setAsync(true)
-								.doAction(() -> {
-									try {
-										event.getChannel().bulkDelete(messagesToDelete);
-									} catch (MissingPermissionsException e) {
-										// Bot doesn't have permissions to delete messages, which means
-										// the channel will get a bit spammy (which might be totally ok with the server admin)
-										// but it's not a real "error". Hence, just log it.
-										LOG.warn("Couldn't purge trivia messages from channel '{}' in guild '{}' due to lack of permissions.", 
-												event.getChannel().getName(),
-												event.getGuild().getName());
-									}
-									
-									return true;
-								}).execute();
+									.shouldBufferRequests(true)
+									.setAsync(true)
+									.doAction(() -> {
+										try {
+											event.getChannel().bulkDelete(messagesToDelete);
+										} catch (MissingPermissionsException e) {
+											// Bot doesn't have permissions to delete messages, which means
+											// the channel will get a bit spammy (which might be totally ok with the server admin)
+											// but it's not a real "error". Hence, just log it.
+											LOG.warn("Couldn't purge trivia messages from channel '{}' in guild '{}' due to lack of permissions.", 
+													event.getChannel().getName(),
+													event.getGuild().getName());
+										}
+										
+										return true;
+									})
+									.execute();
 							}
 						}
 
