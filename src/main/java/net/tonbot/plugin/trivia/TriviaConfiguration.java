@@ -21,5 +21,5 @@ public class TriviaConfiguration {
 	private final double scoreDecayFactor;
 
 	@NonNull
-	private final String difficultyName;
+	private final Difficulty difficulty;
 }

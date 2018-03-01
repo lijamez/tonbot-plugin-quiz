@@ -16,6 +16,7 @@ import net.tonbot.plugin.trivia.model.TriviaTopic;
 class TriviaSessionManager {
 
 	private final TriviaLibrary triviaLibrary;
+	private final DifficultyBasedQuestionSelector questionSelector;
 	private final Random random;
 	private final QuestionHandlers questionHandlers;
 	
@@ -25,9 +26,11 @@ class TriviaSessionManager {
 	@Inject
 	public TriviaSessionManager(
 			TriviaLibrary triviaLibrary, 
+			DifficultyBasedQuestionSelector questionSelector,
 			Random random, 
 			QuestionHandlers questionHandlers) {
 		this.triviaLibrary = Preconditions.checkNotNull(triviaLibrary, "triviaLibrary must be non-null.");
+		this.questionSelector = Preconditions.checkNotNull(questionSelector, "questionSelector must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 		this.questionHandlers = Preconditions.checkNotNull(questionHandlers, "questionHandlers must be non-null.");
 
@@ -83,7 +86,7 @@ class TriviaSessionManager {
 					.orElseThrow(() -> new InvalidTopicException("Trivia topic " + triviaTopicName + " is not valid."));
 			TriviaConfiguration triviaConfig = getConfigFor(loadedTrivia.getTriviaTopic(), difficulty);
 			
-			TriviaSession triviaSession = new TriviaSession(this, listener, loadedTrivia, triviaConfig, random, questionHandlers);
+			TriviaSession triviaSession = new TriviaSession(this, listener, loadedTrivia, triviaConfig, questionSelector, random, questionHandlers);
 			this.sessions.put(sessionKey, triviaSession);
 
 			triviaSession.start();
@@ -147,7 +150,7 @@ class TriviaSessionManager {
 		TriviaConfiguration tc = TriviaConfiguration.builder()
 				.maxQuestions(maxQuestions)
 				.defaultTimePerQuestion(defaultTimePerQuestion)
-				.difficultyName(difficulty.getFriendlyName())
+				.difficulty(difficulty)
 				.scoreDecayFactor(difficulty.getScoreDecayFactor())
 				.maxMultipleChoices(difficulty.getMaxMultipleChoices())
 				.build();

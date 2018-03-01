@@ -37,8 +37,6 @@ class TriviaSession {
 	private final QuestionHandlers questionHandlers;
 	private final long totalQuestionsToAsk;
 
-	private long numQuestionsAsked;
-
 	private TriviaSessionState state;
 	private QuestionHandler currentQuestionHandler;
 
@@ -52,6 +50,7 @@ class TriviaSession {
 			TriviaListener listener, 
 			LoadedTrivia trivia, 
 			TriviaConfiguration config, 
+			DifficultyBasedQuestionSelector questionSelector,
 			Random random, 
 			QuestionHandlers questionHandlers) {
 		
@@ -60,14 +59,17 @@ class TriviaSession {
 		this.listener = new SessionDestroyingTriviaListener(listener, this);
 		this.trivia = Preconditions.checkNotNull(trivia, "trivia must be non-null.");
 		this.config = Preconditions.checkNotNull(config, "config must be non-null.");
+		Preconditions.checkNotNull(questionSelector, "questionSelector must be non-null.");
 		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 		this.questionHandlers = Preconditions.checkNotNull(questionHandlers, "questionHandlers must be non-null.");
+		
+		this.availableQuestionTemplates = questionSelector.pick(
+				this.trivia.getTriviaTopic().getQuestionBundle().getQuestionTemplates(), 
+				config.getDifficulty(), 
+				config.getMaxQuestions());
+		
+		this.totalQuestionsToAsk = availableQuestionTemplates.size();
 
-		this.availableQuestionTemplates = new ArrayList<>(
-				this.trivia.getTriviaTopic().getQuestionBundle().getQuestionTemplates());
-		this.totalQuestionsToAsk = Math.min(config.getMaxQuestions(), availableQuestionTemplates.size());
-
-		this.numQuestionsAsked = 0;
 		this.state = TriviaSessionState.NOT_STARTED;
 		this.currentQuestionHandler = null;
 		this.scorekeeper = new Scorekeeper(config.getScoreDecayFactor());
@@ -88,7 +90,7 @@ class TriviaSession {
 
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(trivia.getTriviaTopic().getMetadata())
-					.difficultyName(config.getDifficultyName())
+					.difficultyName(config.getDifficulty().getFriendlyName())
 					.startingInMs(ROUND_START_DELAY_MS)
 					.hasAudio(hasAudio)
 					.build();
@@ -131,22 +133,26 @@ class TriviaSession {
 		this.scorekeeper.endQuestion();
 		
 		this.state = TriviaSessionState.LOADING_NEXT_QUESTION;
-		boolean hasNextQuestion = totalQuestionsToAsk - numQuestionsAsked > 0;
+		
+		
+		
+		boolean hasNextQuestion = !availableQuestionTemplates.isEmpty();
 		Runnable runnable;
 		if (hasNextQuestion) {
 			runnable = () -> {
 				lock.lock();
 				try {
 					state = TriviaSessionState.WAITING_FOR_ANSWER;
-					QuestionTemplate nextQuestion = pickRandomElement(this.availableQuestionTemplates);
-					this.availableQuestionTemplates.remove(nextQuestion);
-					this.numQuestionsAsked++;
+					QuestionTemplate nextQuestion = this.availableQuestionTemplates.remove(0);
 
 					File imageFile = getRandomImageFile(nextQuestion);
 
 					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
 					this.currentQuestionHandler = questionHandlers.get(nextQuestion, config, listener, trivia);
-					this.currentQuestionHandler.notifyStart(this.numQuestionsAsked, this.totalQuestionsToAsk,
+					
+					long currentQuestionNumber = this.totalQuestionsToAsk - this.availableQuestionTemplates.size();
+					
+					this.currentQuestionHandler.notifyStart(currentQuestionNumber, this.totalQuestionsToAsk,
 							config.getDefaultTimePerQuestion(), imageFile);
 					this.scheduledTaskRunner.replaceSchedule(() -> {
 						try {
@@ -158,6 +164,9 @@ class TriviaSession {
 							LOG.error("Question timeout task has unexpectedly thrown an exception.", e);
 						}
 					}, config.getDefaultTimePerQuestion(), TimeUnit.MILLISECONDS);
+				} catch (Exception e) {
+					LOG.error("Unable to set up next question.", e);
+					throw e;
 				} finally {
 					lock.unlock();
 				}
@@ -281,12 +290,6 @@ class TriviaSession {
 		}
 
 		return imageFile;
-	}
-
-	private <T> T pickRandomElement(List<T> list) {
-		int randomIndex = random.nextInt(list.size());
-
-		return list.get(randomIndex);
 	}
 
 	private static enum TriviaSessionState {

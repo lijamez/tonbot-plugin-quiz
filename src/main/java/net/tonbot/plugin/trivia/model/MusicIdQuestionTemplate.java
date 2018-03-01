@@ -22,6 +22,7 @@ public class MusicIdQuestionTemplate extends QuestionTemplate {
 	/**
 	 * Constructor.
 	 * @param points The number of points this question is worth.
+	 * @param difficulty The difficulty. 0 is the easiest while 1 is the hardest. Nullable.
 	 * @param imagePaths Path to images. Non-null.
 	 * @param audioPath Path to an audio file. Non-null
 	 * @param tags The tags to ask the user. Must contain at least one tag. Non-null.
@@ -29,11 +30,12 @@ public class MusicIdQuestionTemplate extends QuestionTemplate {
 	@Builder
 	@JsonCreator
 	public MusicIdQuestionTemplate(
-			@JsonProperty("points") long points, 
+			@JsonProperty("points") long points,
+			@JsonProperty("difficulty") Double difficulty, 
 			@JsonProperty("images") List<String> imagePaths,
 			@JsonProperty("audio") String audioPath,
 			@JsonProperty("tags") Set<Tag> tags) {
-		super(points, imagePaths);
+		super(points, difficulty, imagePaths);
 		
 		this.audioPath = Preconditions.checkNotNull(audioPath);
 		

@@ -21,12 +21,23 @@ public class ShortAnswerQuestionTemplate extends QuestionTemplate {
 	private final String question;
 	private final List<String> answers;
 
+	/**
+	 * The constructor for a short answer question template.
+	 * @param points The number of points this question is worth.
+	 * @param difficulty The difficulty. 0 is the easiest while 1 is the hardest. Nullable. 
+	 * @param imagePaths Path to images. Non-null.
+	 * @param question The question. Non-null.
+	 * @param answers A list of possible answers. Non-null, non-empty.
+	 */
 	@Builder
 	@JsonCreator
-	public ShortAnswerQuestionTemplate(@JsonProperty("points") long points,
-			@JsonProperty("images") List<String> imagePaths, @JsonProperty("question") String question,
+	public ShortAnswerQuestionTemplate(
+			@JsonProperty("points") long points,
+			@JsonProperty("difficulty") Double difficulty,
+			@JsonProperty("images") List<String> imagePaths, 
+			@JsonProperty("question") String question,
 			@JsonProperty("answers") List<String> answers) {
-		super(points, imagePaths);
+		super(points, difficulty, imagePaths);
 
 		Preconditions.checkArgument(!StringUtils.isBlank(question), "question must not be blank.");
 		this.question = question;

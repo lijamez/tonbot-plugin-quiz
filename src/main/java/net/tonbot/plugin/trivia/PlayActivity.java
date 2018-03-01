@@ -134,7 +134,7 @@ class PlayActivity implements Activity {
 							eb.withTitle(":triangular_flag_on_post: Round finished!");
 
 							eb.appendField("Topic", roundEndEvent.getLoadedTrivia().getTriviaTopic().getMetadata().getName(), true);
-							eb.appendField("Difficulty", roundEndEvent.getTriviaConfig().getDifficultyName(), true);
+							eb.appendField("Difficulty", roundEndEvent.getTriviaConfig().getDifficulty().getFriendlyName(), true);
 							
 							StringBuilder scoresSb = new StringBuilder();
 

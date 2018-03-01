@@ -24,10 +24,13 @@ public class MultipleChoiceQuestionTemplate extends QuestionTemplate {
 
 	@Builder
 	@JsonCreator
-	public MultipleChoiceQuestionTemplate(@JsonProperty("points") long points,
-			@JsonProperty("images") List<String> imagePaths, @JsonProperty("question") String question,
+	public MultipleChoiceQuestionTemplate(
+			@JsonProperty("points") long points,
+			@JsonProperty("difficulty") Double difficulty,
+			@JsonProperty("images") List<String> imagePaths, 
+			@JsonProperty("question") String question,
 			@JsonProperty("choices") List<Choice> choices) {
-		super(points, imagePaths);
+		super(points, difficulty, imagePaths);
 
 		Preconditions.checkArgument(!StringUtils.isBlank(question), "question must not be blank.");
 		this.question = question;
