@@ -158,6 +158,10 @@ class PlayActivity implements Activity {
 									String displayName = user.getDisplayName(event.getGuild());
 									
 									if (rank == 0) {
+										scoresSb.append("**");
+									}
+									
+									if (rank == 0) {
 										scoresSb.append(":first_place: ");
 									} else if (rank == 1) {
 										scoresSb.append(":second_place: ");
@@ -167,12 +171,18 @@ class PlayActivity implements Activity {
 										scoresSb.append(":white_small_square: ");
 									}
 									
-									scoresSb.append(String.format("%s: %d/%d points (%d/%d Correct)\n", 
+									scoresSb.append(String.format("%s: %d/%d points (%d/%d Correct)", 
 											displayName, 
 											record.getTotalEarnedScore(), 
 											record.getTotalPossibleScore(), 
 											record.getTotalCorrectlyAnsweredQuestions(), 
 											record.getTotalQuestions()));
+									
+									if (rank == 0) {
+										scoresSb.append("** :trophy:");
+									}
+									
+									scoresSb.append("\n");
 								}
 							}
 
