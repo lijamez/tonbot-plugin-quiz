@@ -479,13 +479,14 @@ class PlayActivity implements Activity {
 							return msg;
 						}
 						
-						
 					});
 		} catch (InvalidTopicException e) {
 			throw new TonbotBusinessException(
 					"Invalid topic name. Use the ``trivia topics`` command to see the available topics.");
 		} catch (ExistingSessionException e) {
 			throw new TonbotBusinessException("Please wait for the current round to end before starting another.");
+		} finally {
+			botUtils.deleteMessagesQuietly(event.getMessage());
 		}
 	}
 }
