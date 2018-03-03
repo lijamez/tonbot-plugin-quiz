@@ -18,9 +18,10 @@ class ScheduledTaskRunner {
 
 	private static Logger LOG = LoggerFactory.getLogger(ScheduledTaskRunner.class);
 	
-	private ScheduledExecutorService executorService;
+	private final ScheduledExecutorService executorService;
+	private final ReentrantLock lock;
+	
 	private ScheduledFuture<?> scheduledTaskFuture;
-	private ReentrantLock lock;
 
 	public ScheduledTaskRunner() {
 		ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("Scheduled Task Runner %d").build();

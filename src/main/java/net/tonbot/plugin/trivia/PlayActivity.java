@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
@@ -87,6 +88,9 @@ class PlayActivity implements Activity {
 
 			triviaSessionManager.tryCreateSession(sessionKey, request.getTopic(), effectiveDifficulty,
 					new TriviaListener() {
+				
+						private final long FINAL_RESULTS_TTL = 60;
+						private final TimeUnit FINAL_RESULTS_TTL_UNIT = TimeUnit.SECONDS;
 				
 						private final AudioManager audioManager = new AudioManager(event.getGuild(), apm);
 						private final ConcurrentLinkedQueue<IMessage> deletableMessages = new ConcurrentLinkedQueue<>();
@@ -188,8 +192,7 @@ class PlayActivity implements Activity {
 
 							eb.appendField("Scoreboard", scoresSb.toString(), false);
 
-							IMessage message = botUtils.sendEmbedSync(event.getChannel(), eb.build());
-							deletableMessages.add(message);
+							botUtils.sendEmbed(event.getChannel(), eb.build(), FINAL_RESULTS_TTL, FINAL_RESULTS_TTL_UNIT);
 						}
 						
 						@Override
