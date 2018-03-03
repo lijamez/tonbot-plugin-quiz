@@ -39,6 +39,7 @@ import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.obj.ReactionEmoji;
+import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.handle.obj.IVoiceChannel;
@@ -102,28 +103,17 @@ class PlayActivity implements Activity {
 							
 							if (roundStartEvent.isHasAudio()) {
 								IVoiceChannel voiceChannel = event.getAuthor().getVoiceStateForGuild(event.getGuild()).getChannel();
-								if (voiceChannel == null) {
-									throw new TonbotBusinessException("That topic needs audio. Please join a voice channel first.");
+								if (voiceChannel == null) {									
+									throwNeedVoiceChannelException(
+											"The topic ``" + roundStartEvent.getTriviaMetadata().getName() 
+											+ "`` has audio. Please join a voice channel first.", 
+											event.getGuild());
 								}
 								
 								try {
 									audioManager.joinVC(voiceChannel);
 								} catch (MissingPermissionsException e) {
-									
-									IUser self = discordClient.getOurUser();
-									List<String> vcNames = event.getGuild().getVoiceChannels().stream()
-											.filter(vc -> vc.getModifiedPermissions(self).contains(Permissions.VOICE_CONNECT))
-											.map(vc -> ":sound: " + vc.getName())
-											.collect(Collectors.toList());
-									
-									StringBuilder sb = new StringBuilder();
-									sb.append(":x: I'm not allowed to connect to your voice channel. ");
-									
-									if (!vcNames.isEmpty()) {
-										sb.append("Try one of these instead:\n" + StringUtils.join(vcNames, "\n"));
-									}
-									
-									throw new TonbotBusinessException(sb.toString());
+									throwNeedVoiceChannelException("I'm not allowed to connect to your voice channel.", event.getGuild());
 								} catch (AlreadyInAnotherVoiceChannelException e) {
 									throw new TonbotBusinessException("I can't join your voice channel because I'm connected to :sound:``" + e.getVoiceChannel().getName() + "``");
 								}
@@ -140,6 +130,26 @@ class PlayActivity implements Activity {
 									roundStartEvent.getStartingInMs() / 1000);
 							IMessage message = botUtils.sendMessageSync(event.getChannel(), msg);
 							deletableMessages.add(message);
+						}
+						
+						private void throwNeedVoiceChannelException(String message, IGuild guild) {
+							IUser self = discordClient.getOurUser();
+							List<String> connectableVcNames = guild.getVoiceChannels().stream()
+									.filter(vc -> vc.getModifiedPermissions(self).contains(Permissions.VOICE_CONNECT))
+									.map(vc -> ":sound: " + vc.getName())
+									.collect(Collectors.toList());
+							
+							StringBuilder sb = new StringBuilder();
+							sb.append(":x: ");
+							sb.append(message);
+							
+							if (!connectableVcNames.isEmpty()) {
+								sb.append(" Try one of these instead:\n" + StringUtils.join(connectableVcNames, "\n"));
+							} else {
+								sb.append("\nUnfortunately, it seems like I can't connect to any of the voice channels here.");
+							}
+							
+							throw new TonbotBusinessException(sb.toString());
 						}
 
 						@Override
