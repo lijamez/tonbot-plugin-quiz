@@ -78,7 +78,7 @@ class PlayActivity implements Activity {
 		return ACTIVITY_DESCRIPTOR;
 	}
 
-	@Enactable
+	@Enactable(deleteCommand = true)
 	public void enact(MessageReceivedEvent event, PlayRequest request) {
 		
 		try {
@@ -504,8 +504,6 @@ class PlayActivity implements Activity {
 					"Invalid topic name. Use the ``trivia topics`` command to see the available topics.");
 		} catch (ExistingSessionException e) {
 			throw new TonbotBusinessException("Please wait for the current round to end before starting another.");
-		} finally {
-			botUtils.deleteMessagesQuietly(event.getMessage());
 		}
 	}
 }

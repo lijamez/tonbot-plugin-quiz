@@ -30,7 +30,7 @@ class StopActivity implements Activity {
 		return ACTIVITY_DESCRIPTOR;
 	}
 	
-	@Enactable
+	@Enactable(deleteCommand = true)
 	public void enact(MessageReceivedEvent event) {
 
 		TriviaSessionKey sessionKey = new TriviaSessionKey(event.getGuild().getLongID(), event.getChannel().getLongID());

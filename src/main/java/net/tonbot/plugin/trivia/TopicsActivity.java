@@ -35,7 +35,7 @@ class TopicsActivity implements Activity {
 		return ACTIVITY_DESCRIPTOR;
 	}
 
-	@Enactable
+	@Enactable(deleteCommand = true)
 	public void enact(MessageReceivedEvent event) {
 
 		Map<String, LoadedTrivia> triviaMap = triviaLibrary.getTrivia();
