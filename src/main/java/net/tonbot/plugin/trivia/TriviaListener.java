@@ -15,6 +15,12 @@ public interface TriviaListener {
 	void onRoundStart(RoundStartEvent roundStartEvent);
 
 	void onRoundEnd(RoundEndEvent roundEndEvent);
+	
+	/**
+	 * Called when *any* message is received. That message may or may not be an answer.
+	 * @param userMessageReceivedEvent {@link UserMessageReceivedEvent}.
+	 */
+	void onUserMessageReceived(UserMessageReceivedEvent userMessageReceivedEvent);
 
 	void onMultipleChoiceQuestionStart(MultipleChoiceQuestionStartEvent multipleChoiceQuestionStartEvent);
 

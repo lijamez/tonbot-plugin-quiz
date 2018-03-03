@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,8 +178,10 @@ class TriviaSession {
 	}
 
 	/**
-	 * Takes in a message and checks if it answers the current question. No-op if
-	 * the session has not yet started or has ended.
+	 * Takes in a message and if it is considered to be an answer, checks if it answers the current question. 
+	 * The {@code TriviaListener#onUserMessageReceived(UserMessageReceivedEvent)} event is always fired.
+	 * 
+	 * Answer processing only occurs if the session is waiting for an answer.
 	 * 
 	 * @param userMessage
 	 *            {@link UserMessage}. Non-null.
@@ -186,43 +189,76 @@ class TriviaSession {
 	public void takeInput(UserMessage userMessage) {
 		Preconditions.checkNotNull(userMessage, "userMessage must be non-null.");
 
-		lock.lock();
-		try {
-			if (this.state != TriviaSessionState.WAITING_FOR_ANSWER) {
-				return;
+		boolean isAnswer = isAnswer(userMessage);
+		
+		UserMessageReceivedEvent messageReceivedEvent = new UserMessageReceivedEvent(userMessage, isAnswer);
+		listener.onUserMessageReceived(messageReceivedEvent);
+		
+		if (isAnswer) {
+			UserMessage answerMessage = getUserAnswerMessage(userMessage);
+			
+			lock.lock();
+			try {
+				takeAnswer(answerMessage);
+			} finally {
+				lock.unlock();
 			}
-
-			Optional<Boolean> correct = this.currentQuestionHandler.checkCorrectness(userMessage);
-
-			if (!correct.isPresent()) {
-				return;
-			}
-
-			if (correct.get()) {
-				this.scheduledTaskRunner.cancel();
-				long incorrectAnswers = this.scorekeeper.getQuestionRecord(userMessage.getUserId())
-						.getIncorrectAnswers();
-				long awardedPoints = this.scorekeeper.logCorrectAnswer(userMessage.getUserId());
-
-				AnswerCorrectEvent answerCorrectEvent = AnswerCorrectEvent.builder()
-						.messageId(userMessage.getMessageId()).build();
-				this.listener.onAnswerCorrect(answerCorrectEvent);
-				this.currentQuestionHandler.notifyEnd(userMessage, awardedPoints, incorrectAnswers);
-
-				loadNextQuestionOrEnd(PRE_QUESTION_DELAY_MS);
-			} else {
-				// This user participated, so add them to the scores map if they are not already
-				// there.
-				this.scorekeeper.logIncorrectAnswer(userMessage.getUserId());
-
-				AnswerIncorrectEvent event = AnswerIncorrectEvent.builder().messageId(userMessage.getMessageId())
-						.build();
-				listener.onAnswerIncorrect(event);
-			}
-		} finally {
-			lock.unlock();
+		}
+	}
+	
+	private void takeAnswer(UserMessage userAnswer) {
+		if (this.state != TriviaSessionState.WAITING_FOR_ANSWER) {
+			return;
 		}
 
+		Optional<Boolean> correct = this.currentQuestionHandler.checkCorrectness(userAnswer);
+
+		if (!correct.isPresent()) {
+			return;
+		}
+
+		if (correct.get()) {
+			this.scheduledTaskRunner.cancel();
+			long incorrectAnswers = this.scorekeeper.getQuestionRecord(userAnswer.getUserId())
+					.getIncorrectAnswers();
+			long awardedPoints = this.scorekeeper.logCorrectAnswer(userAnswer.getUserId());
+
+			AnswerCorrectEvent answerCorrectEvent = AnswerCorrectEvent.builder()
+					.messageId(userAnswer.getMessageId()).build();
+			this.listener.onAnswerCorrect(answerCorrectEvent);
+			this.currentQuestionHandler.notifyEnd(userAnswer, awardedPoints, incorrectAnswers);
+
+			loadNextQuestionOrEnd(PRE_QUESTION_DELAY_MS);
+		} else {
+			// This user participated, so add them to the scores map if they are not already
+			// there.
+			this.scorekeeper.logIncorrectAnswer(userAnswer.getUserId());
+
+			AnswerIncorrectEvent event = AnswerIncorrectEvent.builder().messageId(userAnswer.getMessageId())
+					.build();
+			listener.onAnswerIncorrect(event);
+		}
+	}
+	
+	private boolean isAnswer(UserMessage rawUserMessage) {
+		String rawMessageContent = rawUserMessage.getMessage();
+		
+		// Ignore messages without answer suffix.
+		return rawMessageContent.length() > Constants.ANSWER_SUFFIX.length() 
+				&& StringUtils.endsWith(rawMessageContent, Constants.ANSWER_SUFFIX);
+		
+	}
+	
+	private UserMessage getUserAnswerMessage(UserMessage rawUserMessage) {
+		String rawMessageContent = rawUserMessage.getMessage();
+		
+		String userAnswer = StringUtils.substring(rawMessageContent, 0, rawMessageContent.length() - Constants.ANSWER_SUFFIX.length());
+		
+		return UserMessage.builder()
+				.message(userAnswer)
+				.messageId(rawUserMessage.getMessageId())
+				.userId(rawUserMessage.getUserId())
+				.build();
 	}
 
 	/**

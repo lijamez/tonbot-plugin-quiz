@@ -2,8 +2,6 @@ package net.tonbot.plugin.trivia;
 
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
@@ -31,17 +29,6 @@ class DiscordMessageEventListener {
 		
 		IMessage message = messageReceivedEvent.getMessage();
 		String messageContent = messageReceivedEvent.getMessage().getContent();
-		
-		// Ignore messages without answer suffix.
-		if (messageContent.length() > 1 && !StringUtils.endsWith(messageContent, Constants.ANSWER_SUFFIX)) {
-			return;
-		}
-		
-		String userAnswer = StringUtils.substring(messageContent, 0, messageContent.length() - Constants.ANSWER_SUFFIX.length());
-		
-		if (StringUtils.isEmpty(userAnswer)) {
-			return;
-		}
 
 		TriviaSessionKey sessionKey = new TriviaSessionKey(messageReceivedEvent.getGuild().getLongID(),
 				messageReceivedEvent.getChannel().getLongID());
@@ -53,8 +40,12 @@ class DiscordMessageEventListener {
 
 		TriviaSession session = optSession.get();
 
-		UserMessage userMessage = UserMessage.builder().message(userAnswer).messageId(message.getLongID())
-				.userId(messageReceivedEvent.getAuthor().getLongID()).build();
+		UserMessage userMessage = UserMessage.builder()
+				.message(messageContent)
+				.messageId(message.getLongID())
+				.userId(messageReceivedEvent.getAuthor().getLongID())
+				.build();
+		
 		session.takeInput(userMessage);
 	}
 }

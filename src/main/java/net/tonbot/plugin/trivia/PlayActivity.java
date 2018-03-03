@@ -212,6 +212,14 @@ class PlayActivity implements Activity {
 						}
 						
 						@Override
+						public void onUserMessageReceived(UserMessageReceivedEvent umre) {
+							if (umre.isAnswer()) {
+								IMessage message = discordClient.getMessageByID(umre.getUserMessage().getMessageId());
+								deletableMessages.add(message);
+							}
+						}
+						
+						@Override
 						public void onCrash() {
 							botUtils.sendMessage(event.getChannel(), "The trivia has crashed. :(");
 						}
@@ -357,8 +365,6 @@ class PlayActivity implements Activity {
 							if (message != null) {
 								react(message, ReactionEmoji.of("✅"));
 							}
-							
-							deletableMessages.add(message);
 						}
 
 						@Override
@@ -367,8 +373,6 @@ class PlayActivity implements Activity {
 							if (message != null) {
 								react(message, ReactionEmoji.of("❌"));
 							}
-							
-							deletableMessages.add(message);
 						}
 						
 						private void react(IMessage message, ReactionEmoji reactionEmoji) {
@@ -393,24 +397,7 @@ class PlayActivity implements Activity {
 									messagesToDelete.add(deletableMessages.poll());
 								}
 								
-								new RequestBuilder(discordClient)
-									.shouldBufferRequests(true)
-									.setAsync(true)
-									.doAction(() -> {
-										try {
-											event.getChannel().bulkDelete(messagesToDelete);
-										} catch (MissingPermissionsException e) {
-											// Bot doesn't have permissions to delete messages, which means
-											// the channel will get a bit spammy (which might be totally ok with the server admin)
-											// but it's not a real "error". Hence, just log it.
-											LOG.warn("Couldn't purge trivia messages from channel '{}' in guild '{}' due to lack of permissions.", 
-													event.getChannel().getName(),
-													event.getGuild().getName());
-										}
-										
-										return true;
-									})
-									.execute();
+								botUtils.deleteMessagesQuietly(messagesToDelete);
 							}
 						}
 
@@ -497,7 +484,6 @@ class PlayActivity implements Activity {
 
 							return msg;
 						}
-						
 					});
 		} catch (InvalidTopicException e) {
 			throw new TonbotBusinessException(

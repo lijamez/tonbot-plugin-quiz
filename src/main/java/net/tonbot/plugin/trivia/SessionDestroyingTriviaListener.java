@@ -43,6 +43,11 @@ class SessionDestroyingTriviaListener implements TriviaListener {
 	public void onRoundEnd(RoundEndEvent roundEndEvent) {
 		run(() -> listener.onRoundEnd(roundEndEvent));
 	}
+	
+	@Override
+	public void onUserMessageReceived(UserMessageReceivedEvent userMessageReceivedEvent) {
+		run(() -> listener.onUserMessageReceived(userMessageReceivedEvent));
+	}
 
 	@Override
 	public void onMultipleChoiceQuestionStart(MultipleChoiceQuestionStartEvent multipleChoiceQuestionStartEvent) {
