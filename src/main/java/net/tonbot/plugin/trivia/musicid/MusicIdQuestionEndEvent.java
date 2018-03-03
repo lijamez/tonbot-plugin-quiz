@@ -13,6 +13,8 @@ import net.tonbot.plugin.trivia.Win;
 public class MusicIdQuestionEndEvent extends QuestionEndEvent {
 
 	private final String canonicalAnswer;
+	
+	private final SongMetadata songMetadata;
 
 	/**
 	 * 
@@ -22,13 +24,20 @@ public class MusicIdQuestionEndEvent extends QuestionEndEvent {
 	 *            The win details, if any. Nullable.
 	 * @param canonicalAnswer
 	 *            The "canonical" answer. Non-null.
+	 * @param songMetadata
+	 *            Information about the song that was just played. Non-null.
 	 * @param answererId
 	 *            The user who answered correctly, if any. Nullable.
 	 */
 	@Builder
-	private MusicIdQuestionEndEvent(boolean timedOut, Win win, String canonicalAnswer) {
+	private MusicIdQuestionEndEvent(
+			boolean timedOut, 
+			Win win, 
+			String canonicalAnswer,
+			SongMetadata songMetadata) {
 		super(timedOut, win);
 
 		this.canonicalAnswer = Preconditions.checkNotNull(canonicalAnswer, "canonicalAnswer must be non-null.");
+		this.songMetadata = Preconditions.checkNotNull(songMetadata, "songMetadata must be non-null.");
 	}
 }

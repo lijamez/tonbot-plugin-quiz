@@ -3,12 +3,16 @@ package net.tonbot.plugin.trivia.musicid;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
@@ -129,13 +133,28 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 					.build();
 		}
 		
+		SongMetadata songMetadata = getSongMetadataForEvent(audioFile);
+		
 		MusicIdQuestionEndEvent event = MusicIdQuestionEndEvent.builder()
 				.canonicalAnswer(canonicalAnswer)
 				.timedOut(userMessage == null)
 				.win(win)
+				.songMetadata(songMetadata)
 				.build();
 		
 		listener.onMusicIdQuestionEnd(event);
+	}
+	
+	private SongMetadata getSongMetadataForEvent(AudioFile af) {
+		Map<Tag, String> tags = Arrays.asList(Tag.values()).stream()
+				.filter(tag -> !StringUtils.isBlank(af.getTag().getFirst(tag.getFieldKey())))
+				.collect(Collectors.toMap(t -> t, t -> af.getTag().getFirst(t.getFieldKey())));
+		
+		SongMetadata sm = SongMetadata.builder()
+				.tags(tags)
+				.build();
+		
+		return sm;
 	}
 
 	@Data

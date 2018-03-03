@@ -36,6 +36,8 @@ import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
+import net.tonbot.plugin.trivia.musicid.SongMetadata;
+import net.tonbot.plugin.trivia.musicid.Tag;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.obj.ReactionEmoji;
@@ -95,6 +97,12 @@ class PlayActivity implements Activity {
 						private final long FINAL_RESULTS_TTL = 60;
 						private final TimeUnit FINAL_RESULTS_TTL_UNIT = TimeUnit.SECONDS;
 				
+						private final List<Tag> MUSIC_ID_QUESTION_END_SONG_FIELDS = ImmutableList.of(
+								Tag.TITLE,
+								Tag.ALBUM,
+								Tag.ARTIST,
+								Tag.COMPOSER);
+						
 						private final AudioManager audioManager = new AudioManager(event.getGuild(), apm);
 						private final ConcurrentLinkedQueue<IMessage> deletableMessages = new ConcurrentLinkedQueue<>();
 				
@@ -362,10 +370,25 @@ class PlayActivity implements Activity {
 							Win win = musicIdQuestionEndEvent.getWin().orElse(null);
 							String canonicalAnswer = musicIdQuestionEndEvent.getCanonicalAnswer();
 
-							String msg = getStandardRoundEndMessage(win,
+							StringBuilder sb = new StringBuilder();
+							
+							// The standard "round end" message.
+							String stdMessage = getStandardRoundEndMessage(win,
 									win != null ? win.getWinningMessage().getMessage() : canonicalAnswer);
+							sb.append(stdMessage);
+							
+							// Add some song metadata to the message.
+							sb.append("\n\n");
+							SongMetadata sm = musicIdQuestionEndEvent.getSongMetadata();
+							MUSIC_ID_QUESTION_END_SONG_FIELDS.stream()
+								.forEach(tag -> {
+									String value = sm.getTags().get(tag);
+									if (value != null) {
+										sb.append("**").append(tag.getFriendlyName()).append("** ").append(value).append("\n");
+									}
+								});
 
-							IMessage message = botUtils.sendMessageSync(event.getChannel(), msg);
+							IMessage message = botUtils.sendMessageSync(event.getChannel(), sb.toString());
 							deletableMessages.add(message);
 						}
 
