@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,7 @@ import sx.blah.discord.handle.impl.obj.ReactionEmoji;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.handle.obj.IVoiceChannel;
+import sx.blah.discord.handle.obj.Permissions;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RequestBuilder;
@@ -107,9 +109,23 @@ class PlayActivity implements Activity {
 								try {
 									audioManager.joinVC(voiceChannel);
 								} catch (MissingPermissionsException e) {
-									throw new TonbotBusinessException("I'm not allowed to connect to that voice channel.");
+									
+									IUser self = discordClient.getOurUser();
+									List<String> vcNames = event.getGuild().getVoiceChannels().stream()
+											.filter(vc -> vc.getModifiedPermissions(self).contains(Permissions.VOICE_CONNECT))
+											.map(vc -> ":sound: " + vc.getName())
+											.collect(Collectors.toList());
+									
+									StringBuilder sb = new StringBuilder();
+									sb.append(":x: I'm not allowed to connect to your voice channel. ");
+									
+									if (!vcNames.isEmpty()) {
+										sb.append("Try one of these instead:\n" + StringUtils.join(vcNames, "\n"));
+									}
+									
+									throw new TonbotBusinessException(sb.toString());
 								} catch (AlreadyInAnotherVoiceChannelException e) {
-									throw new TonbotBusinessException("I can't join your voice channel because I'm connected to ``" + e.getVoiceChannel().getName() + "``");
+									throw new TonbotBusinessException("I can't join your voice channel because I'm connected to :sound:``" + e.getVoiceChannel().getName() + "``");
 								}
 							}
 							
