@@ -353,7 +353,7 @@ class PlayActivity implements Activity {
 								question = "Who is the composer of this track?";
 								break;
 							default:
-								question = "What is the " + musicIdQuestionStartEvent.getTagToAsk() + " of this track?";
+								question = "What is the " + musicIdQuestionStartEvent.getTagToAsk().getFriendlyName() + " of this track?";
 								break;
 							}
 							eb.withTitle("🎵 " + question);
@@ -409,8 +409,6 @@ class PlayActivity implements Activity {
 						}
 						
 						private void react(IMessage message, ReactionEmoji reactionEmoji) {
-							// We don't need to buffer the requests since these reactions are relatively unimportant
-							// and can be skipped if we are being rate limited.
 							new RequestBuilder(discordClient)
 								.shouldBufferRequests(true)
 								.setAsync(true)
