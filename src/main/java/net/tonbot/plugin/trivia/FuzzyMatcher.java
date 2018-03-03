@@ -77,11 +77,11 @@ public class FuzzyMatcher {
 	private String normalize(String phrase) {
 		String normalized = phrase.trim();
 
-		// Multi-space characters should be replaced with a single space
-		normalized = normalized.replaceAll("\\s+", " ");
-
 		// Punctuation should be removed.
 		normalized = normalized.replaceAll("\\p{Punct}", "");
+		
+		// Multi-space characters should be replaced with a single space
+		normalized = normalized.replaceAll("\\s+", " ");
 		
 		normalized = normalized.toLowerCase();
 

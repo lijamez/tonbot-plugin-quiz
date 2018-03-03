@@ -2,8 +2,6 @@ package net.tonbot.plugin.trivia.musicid;
 
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.base.Preconditions;
 
 import lombok.Builder;
