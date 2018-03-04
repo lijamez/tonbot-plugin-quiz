@@ -213,7 +213,7 @@ class TriviaSession {
 
 		Optional<Boolean> correct = this.currentQuestionHandler.checkCorrectness(userAnswer);
 
-		if (!correct.isPresent()) {
+		if (!correct.isPresent()) {;
 			return;
 		}
 

@@ -239,6 +239,8 @@ class PlayActivity implements Activity {
 						
 						@Override
 						public void onCrash() {
+							audioManager.leaveVC();
+							
 							botUtils.sendMessage(event.getChannel(), "The trivia has crashed. :(");
 						}
 
