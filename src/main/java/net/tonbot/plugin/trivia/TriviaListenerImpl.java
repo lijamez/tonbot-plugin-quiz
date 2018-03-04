@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +67,8 @@ class TriviaListenerImpl implements TriviaListener {
 	private final Color accentColor;
 	private final AudioManager audioManager;
 	private final ConcurrentLinkedQueue<IMessage> deletableMessages = new ConcurrentLinkedQueue<>();
+	
+	private LoadedAudioCues audioCues;
 
 	public TriviaListenerImpl(IDiscordClient discordClient, IUser initiator, IChannel channel, BotUtils botUtils, Color accentColor, AudioPlayerManager apm) {
 		this.discordClient = Preconditions.checkNotNull(discordClient, "discordClient must be non-null.");
@@ -78,6 +81,7 @@ class TriviaListenerImpl implements TriviaListener {
 	
 	@Override
 	public void onRoundStart(RoundStartEvent roundStartEvent) {
+		this.audioCues = roundStartEvent.getAudioCues();
 		
 		if (roundStartEvent.isHasAudio()) {
 			IVoiceChannel voiceChannel = initiator.getVoiceStateForGuild(channel.getGuild()).getChannel();
@@ -90,6 +94,7 @@ class TriviaListenerImpl implements TriviaListener {
 			
 			try {
 				audioManager.joinVC(voiceChannel);
+				audioCues.getRoundStart().ifPresent(audioManager::playInVC);
 			} catch (MissingPermissionsException e) {
 				throwNeedVoiceChannelException("I'm not allowed to connect to your voice channel.", channel.getGuild());
 			} catch (AlreadyInAnotherVoiceChannelException e) {
@@ -133,7 +138,6 @@ class TriviaListenerImpl implements TriviaListener {
 	@Override
 	public void onRoundEnd(RoundEndEvent roundEndEvent) {
 		LOG.info("Round has ended.");
-		audioManager.leaveVC();
 		purgeDeletableMessagesAsync();
 		
 		Map<Long, Record> scorekeepingRecords = roundEndEvent.getScorekeepingRecords();
@@ -197,6 +201,20 @@ class TriviaListenerImpl implements TriviaListener {
 		eb.appendField("Scoreboard", scoresSb.toString(), false);
 
 		botUtils.sendEmbed(channel, eb.build(), FINAL_RESULTS_TTL, FINAL_RESULTS_TTL_UNIT);
+		
+		File roundCompleteAudioCue = audioCues.getRoundComplete().orElse(null);
+		if (roundCompleteAudioCue != null) {
+			AudioTrack at = audioManager.findTrack(roundCompleteAudioCue);
+			long durationMs = at.getDuration();
+			audioManager.playInVC(at, 0);
+			try {
+				Thread.sleep(durationMs + 500);
+			} catch (InterruptedException e) {
+				LOG.warn("TriviaListener thread was interrupted from sleep.", e);
+			}
+		}
+		
+		audioManager.leaveVC();
 	}
 	
 	@Override
@@ -340,6 +358,10 @@ class TriviaListenerImpl implements TriviaListener {
 		audioManager.stopPlaying();
 		
 		Win win = musicIdQuestionEndEvent.getWin().orElse(null);
+		
+		Optional<File> audioCue = win != null ? audioCues.getSuccess() : audioCues.getFailure();
+		audioCue.ifPresent(audioManager::playInVC);
+		
 		String canonicalAnswer = musicIdQuestionEndEvent.getCanonicalAnswer();
 
 		StringBuilder sb = new StringBuilder();

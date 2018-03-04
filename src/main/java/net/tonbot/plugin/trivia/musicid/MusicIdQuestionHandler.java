@@ -46,7 +46,8 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 	private final TagValues tagToAsk;
 	private final AudioFile audioFile;
 	
-	public MusicIdQuestionHandler(MusicIdQuestionTemplate questionTemplate, 
+	public MusicIdQuestionHandler(
+			MusicIdQuestionTemplate questionTemplate, 
 			TriviaConfiguration config,
 			TriviaListener listener,
 			Random random,

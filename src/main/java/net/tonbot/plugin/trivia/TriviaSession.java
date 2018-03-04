@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import net.tonbot.common.TonbotBusinessException;
+import net.tonbot.plugin.trivia.model.AudioCues;
 import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate;
 import net.tonbot.plugin.trivia.model.QuestionTemplate;
 
@@ -86,12 +87,17 @@ class TriviaSession {
 				.filter(qt -> (qt instanceof MusicIdQuestionTemplate))
 				.findAny()
 				.isPresent();
+			
+			LoadedAudioCues loadedAudioCues = trivia.getTriviaTopic().getMetadata().getAudioCues()
+				.map(this::loadAudioCues)
+				.orElseGet(() -> LoadedAudioCues.builder().build());
 
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(trivia.getTriviaTopic().getMetadata())
 					.difficultyName(config.getDifficultyName())
 					.startingInMs(ROUND_START_DELAY_MS)
 					.hasAudio(hasAudio)
+					.audioCues(loadedAudioCues)
 					.build();
 			
 			try {
@@ -107,6 +113,22 @@ class TriviaSession {
 		} finally {
 			lock.unlock();
 		}
+	}
+	
+	private LoadedAudioCues loadAudioCues(AudioCues audioCues) {
+		LoadedAudioCues loadedAudioCues = LoadedAudioCues.builder()
+				.success(audioCues.getSuccessSoundPath().map(this::loadFile).orElse(null))
+				.failure(audioCues.getFailureSoundPath().map(this::loadFile).orElse(null))
+				.roundStart(audioCues.getRoundStartSoundPath().map(this::loadFile).orElse(null))
+				.roundComplete(audioCues.getRoundCompleteSoundPath().map(this::loadFile).orElse(null))
+				.build();
+		
+		return loadedAudioCues;
+	}
+	
+	private File loadFile(String relativePath) {
+		File file = new File(this.trivia.getTriviaTopicDir(), relativePath);
+		return file;
 	}
 
 	/**

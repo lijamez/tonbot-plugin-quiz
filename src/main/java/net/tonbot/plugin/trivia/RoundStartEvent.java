@@ -21,4 +21,7 @@ class RoundStartEvent {
 	private final long startingInMs;
 	
 	private final boolean hasAudio;
+	
+	@NonNull
+	private final LoadedAudioCues audioCues;
 }

@@ -89,7 +89,10 @@ class TriviaLibrary {
 			TriviaMetadata metadata = objectMapper.readValue(metadataFile, TriviaMetadata.class);
 			QuestionTemplateBundle questionBundle = objectMapper.readValue(questionsFile, QuestionTemplateBundle.class);
 
-			TriviaTopic triviaTopic = TriviaTopic.builder().metadata(metadata).questionBundle(questionBundle).build();
+			TriviaTopic triviaTopic = TriviaTopic.builder()
+					.metadata(metadata)
+					.questionBundle(questionBundle)
+					.build();
 
 			sanityChecker.check(triviaTopic, triviaTopicDir);
 

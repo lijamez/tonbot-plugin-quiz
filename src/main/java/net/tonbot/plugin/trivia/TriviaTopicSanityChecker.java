@@ -47,7 +47,15 @@ class TriviaTopicSanityChecker {
 	public void check(TriviaTopic triviaTopic, File triviaTopicDir) {
 		Preconditions.checkNotNull(triviaTopic, "triviaTopic must be non-null.");
 		Preconditions.checkNotNull(triviaTopicDir, "triviaTopicDir must be non-null.");
-
+		
+		triviaTopic.getMetadata()
+			.getAudioCues()
+			.ifPresent(audioCues -> {
+				audioCues.getSuccessSoundPath().ifPresent(p -> checkFileExistence(p, triviaTopic, triviaTopicDir));
+				audioCues.getFailureSoundPath().ifPresent(p -> checkFileExistence(p, triviaTopic, triviaTopicDir));
+				audioCues.getRoundCompleteSoundPath().ifPresent(p -> checkFileExistence(p, triviaTopic, triviaTopicDir));
+			});
+		
 		triviaTopic.getQuestionBundle().getQuestionTemplates().forEach(q -> {
 			checkImageUrls(q, triviaTopic, triviaTopicDir);
 			checkMusicIdQuestions(q, triviaTopic, triviaTopicDir);
@@ -75,10 +83,14 @@ class TriviaTopicSanityChecker {
 	
 	private void checkAudioFileExistence(MusicIdQuestionTemplate q, TriviaTopic triviaTopic, File triviaTopicDir) {
 		String audioRelativePath = q.getAudioPath();
-		File audioFile = new File(triviaTopicDir, audioRelativePath);
+		checkFileExistence(audioRelativePath, triviaTopic, triviaTopicDir);
+	}
+	
+	private void checkFileExistence(String relativePath, TriviaTopic triviaTopic, File triviaTopicDir) {
+		File audioFile = new File(triviaTopicDir, relativePath);
 		if (!audioFile.exists()) {
 			throw new TriviaTopicSanityException("Trivia Topic " + triviaTopic.getMetadata().getName()
-					+ " uses an non-existent audio file at " + audioRelativePath);
+					+ " uses an non-existent file at " + relativePath);
 		}
 	}
 	

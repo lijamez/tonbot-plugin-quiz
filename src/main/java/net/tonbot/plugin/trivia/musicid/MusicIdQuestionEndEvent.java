@@ -26,8 +26,7 @@ public class MusicIdQuestionEndEvent extends QuestionEndEvent {
 	 *            The "canonical" answer. Non-null.
 	 * @param songMetadata
 	 *            Information about the song that was just played. Non-null.
-	 * @param answererId
-	 *            The user who answered correctly, if any. Nullable.
+	 *            
 	 */
 	@Builder
 	private MusicIdQuestionEndEvent(
@@ -40,4 +39,5 @@ public class MusicIdQuestionEndEvent extends QuestionEndEvent {
 		this.canonicalAnswer = Preconditions.checkNotNull(canonicalAnswer, "canonicalAnswer must be non-null.");
 		this.songMetadata = Preconditions.checkNotNull(songMetadata, "songMetadata must be non-null.");
 	}
+
 }

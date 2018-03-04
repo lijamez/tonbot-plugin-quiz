@@ -102,6 +102,19 @@ class AudioManager {
 	}
 	
 	/**
+	 * Plays an audio {@link File} immediately. 
+	 * @param audioFile An audio {@link File}. Non-null.
+	 */
+	public void playInVC(File audioFile) {
+		Preconditions.checkNotNull(audioFile, "audioFile must be non-null.");
+		
+		if (this.audioPlayer != null) {
+			AudioTrack at = findTrack(audioFile);
+			playInVC(at, 0);
+		}
+	}
+	
+	/**
 	 * Stops playing the current track.
 	 */
 	public void stopPlaying() {
