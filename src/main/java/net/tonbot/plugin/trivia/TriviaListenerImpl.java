@@ -105,15 +105,14 @@ class TriviaListenerImpl implements TriviaListener {
 		TriviaMetadata metadata = roundStartEvent.getTriviaMetadata();
 		
 		EmbedBuilder eb = new EmbedBuilder();
-		eb.withAuthorName("Starting trivia...");
 		eb.withTitle(":checkered_flag: " + metadata.getName());
 		eb.appendDesc(metadata.getDescription() + "\n\n" 
 				+ String.format("**Submit your answer by ending it with ``%s`` (an exclamation mark)!**", Constants.ANSWER_SUFFIX));
 		eb.appendField("Difficulty", roundStartEvent.getDifficultyName(), true);
 		eb.appendField("Starting in", String.format("%d seconds", roundStartEvent.getStartingInMs() / 1000), true);
-		eb.withFooterText("started by " + initiator.getDisplayName(channel.getGuild()));
+		eb.withFooterText("Started by " + initiator.getDisplayName(channel.getGuild()));
+		eb.withFooterIcon(initiator.getAvatarURL());
 		eb.withColor(accentColor);
-		
 		
 		IMessage message;
 		if (roundStartEvent.getIcon().isPresent()) {

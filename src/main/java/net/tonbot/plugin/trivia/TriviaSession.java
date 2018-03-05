@@ -26,7 +26,7 @@ class TriviaSession {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(TriviaSession.class);
 
-	private static final long ROUND_START_DELAY_MS = 10000;
+	private static final long ROUND_START_DELAY_MS = 15000;
 	private static final long PRE_QUESTION_DELAY_MS = 8000;
 	
 	private final TriviaSessionManager triviaSessionManager;
