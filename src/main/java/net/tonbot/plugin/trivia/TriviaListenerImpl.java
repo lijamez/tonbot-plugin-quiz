@@ -103,15 +103,37 @@ class TriviaListenerImpl implements TriviaListener {
 		}
 		
 		TriviaMetadata metadata = roundStartEvent.getTriviaMetadata();
-		String msg = String.format(
-				":checkered_flag: Starting ``%s`` on %s difficulty...\n\n"
-				+ "**Submit your answer by ending it with** ``%s``\n\n"
-				+ "Starting round in %s seconds... Good luck!",
-				metadata.getName(), 
-				roundStartEvent.getDifficultyName(),
-				Constants.ANSWER_SUFFIX,
-				roundStartEvent.getStartingInMs() / 1000);
-		IMessage message = botUtils.sendMessageSync(channel, msg);
+		
+		EmbedBuilder eb = new EmbedBuilder();
+		eb.withAuthorName("Starting trivia...");
+		eb.withTitle(":checkered_flag: " + metadata.getName());
+		eb.appendDesc(metadata.getDescription() + "\n\n" 
+				+ String.format("**Submit your answer by ending it with ``%s`` (an exclamation mark)!**", Constants.ANSWER_SUFFIX));
+		eb.appendField("Difficulty", roundStartEvent.getDifficultyName(), true);
+		eb.appendField("Starting in", String.format("%d seconds", roundStartEvent.getStartingInMs() / 1000), true);
+		eb.withFooterText("started by " + initiator.getDisplayName(channel.getGuild()));
+		eb.withColor(accentColor);
+		
+		
+		IMessage message;
+		if (roundStartEvent.getIcon().isPresent()) {
+			File icon = roundStartEvent.getIcon().get();
+			
+			String fileName = icon.getName();
+			eb.withThumbnail("attachment://" + fileName);
+			
+			try {
+				FileInputStream fis = new FileInputStream(icon);
+				message = botUtils.sendEmbedSync(channel, eb.build(), fis, fileName);
+			} catch (FileNotFoundException e) {
+				LOG.warn("Unable to read trivia icon.", e);
+				message = botUtils.sendEmbedSync(channel, eb.build());
+			}
+			
+		} else {
+			message = botUtils.sendEmbedSync(channel, eb.build());
+		}
+		
 		deletableMessages.add(message);
 	}
 	

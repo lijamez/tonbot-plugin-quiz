@@ -56,10 +56,15 @@ class TriviaTopicSanityChecker {
 				audioCues.getRoundCompleteSoundPath().ifPresent(p -> checkFileExistence(p, triviaTopic, triviaTopicDir));
 			});
 		
+		triviaTopic.getMetadata().getIconPath()
+			.ifPresent(iconPath -> {
+				checkFileExistence(iconPath, triviaTopic, triviaTopicDir);
+			});
+		
 		triviaTopic.getQuestionBundle().getQuestionTemplates().forEach(q -> {
-			checkImageUrls(q, triviaTopic, triviaTopicDir);
-			checkMusicIdQuestions(q, triviaTopic, triviaTopicDir);
-		});
+				checkImageUrls(q, triviaTopic, triviaTopicDir);
+				checkMusicIdQuestions(q, triviaTopic, triviaTopicDir);
+			});
 	}
 
 	private void checkImageUrls(QuestionTemplate q, TriviaTopic triviaTopic, File triviaTopicDir) {

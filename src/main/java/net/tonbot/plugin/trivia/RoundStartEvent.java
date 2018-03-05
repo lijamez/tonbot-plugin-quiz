@@ -1,5 +1,8 @@
 package net.tonbot.plugin.trivia;
 
+import java.io.File;
+import java.util.Optional;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -24,4 +27,10 @@ class RoundStartEvent {
 	
 	@NonNull
 	private final LoadedAudioCues audioCues;
+	
+	private final File icon;
+	
+	public Optional<File> getIcon() {
+		return Optional.ofNullable(icon);
+	}
 }

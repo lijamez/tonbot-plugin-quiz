@@ -28,8 +28,13 @@ class MultipleChoiceQuestionHandler implements QuestionHandler {
 	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationMs, File imageFile) {
 
 		MultipleChoiceQuestionStartEvent startEvent = MultipleChoiceQuestionStartEvent.builder()
-				.questionNumber(questionNumber).totalQuestions(totalQuestions).maxDurationMs(maxDurationMs)
-				.imageFile(imageFile).mcQuestion(question).choices(choices).build();
+				.questionNumber(questionNumber)
+				.totalQuestions(totalQuestions)
+				.maxDurationMs(maxDurationMs)
+				.imageFile(imageFile)
+				.mcQuestion(question)
+				.choices(choices)
+				.build();
 
 		listener.onMultipleChoiceQuestionStart(startEvent);
 	}

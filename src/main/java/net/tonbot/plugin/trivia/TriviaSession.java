@@ -91,6 +91,10 @@ class TriviaSession {
 			LoadedAudioCues loadedAudioCues = trivia.getTriviaTopic().getMetadata().getAudioCues()
 				.map(this::loadAudioCues)
 				.orElseGet(() -> LoadedAudioCues.builder().build());
+			
+			File iconFile = trivia.getTriviaTopic().getMetadata().getIconPath()
+				.map(this::loadFile)
+				.orElse(null);
 
 			RoundStartEvent roundStartEvent = RoundStartEvent.builder()
 					.triviaMetadata(trivia.getTriviaTopic().getMetadata())
@@ -98,6 +102,7 @@ class TriviaSession {
 					.startingInMs(ROUND_START_DELAY_MS)
 					.hasAudio(hasAudio)
 					.audioCues(loadedAudioCues)
+					.icon(iconFile)
 					.build();
 			
 			try {

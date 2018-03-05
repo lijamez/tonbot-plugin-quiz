@@ -19,6 +19,7 @@ public class TriviaMetadata {
 	private final String name;
 	private final String version;
 	private final String description;
+	private final String iconPath;
 	private final int defaultQuestionsPerRound;
 	private final long defaultTimePerQuestion; //in ms
 	private final List<List<String>> synonyms;
@@ -30,6 +31,7 @@ public class TriviaMetadata {
 			@JsonProperty("name") String name, 
 			@JsonProperty("version") String version,
 			@JsonProperty("description") String description,
+			@JsonProperty("icon") String iconPath,
 			@JsonProperty("defaultQuestionsPerRound") int defaultQuestionsPerRound,
 			@JsonProperty("defaultTimePerQuestion") long defaultTimePerQuestion,
 			@JsonProperty("synonyms") List<List<String>> synonyms,
@@ -43,6 +45,7 @@ public class TriviaMetadata {
 		this.name = name;
 		this.version = version;
 		this.description = description;
+		this.iconPath = iconPath;
 		this.defaultQuestionsPerRound = defaultQuestionsPerRound;
 		this.defaultTimePerQuestion = defaultTimePerQuestion;
 		this.synonyms = synonyms == null ? ImmutableList.of() : ImmutableList.copyOf(synonyms);
@@ -51,6 +54,10 @@ public class TriviaMetadata {
 	
 	public Optional<AudioCues> getAudioCues() {
 		return Optional.ofNullable(audioCues);
+	}
+	
+	public Optional<String> getIconPath() {
+		return Optional.ofNullable(iconPath);
 	}
 
 }
