@@ -14,7 +14,7 @@ import net.tonbot.plugin.trivia.model.QuestionTemplate;
 @EqualsAndHashCode(callSuper = true)
 public class MusicIdQuestionStartEvent extends QuestionStartEvent {
 
-	private final Tag tagToAsk;
+	private final SongProperty propertyToAsk;
 	private final File audioFile;
 	
 	@Builder
@@ -24,11 +24,11 @@ public class MusicIdQuestionStartEvent extends QuestionStartEvent {
 			long totalQuestions,
 			long maxDurationMs, 
 			File image,
-			Tag tagToAsk,
+			SongProperty propertyToAsk,
 			File audioFile) {
 		super(question, questionNumber, totalQuestions, maxDurationMs, image);
 		
-		this.tagToAsk = Preconditions.checkNotNull(tagToAsk, "tagToAsk must be non-null.");
+		this.propertyToAsk = Preconditions.checkNotNull(propertyToAsk, "propertyToAsk must be non-null.");
 		this.audioFile = Preconditions.checkNotNull(audioFile, "audioFile must be non-null.");
 	}
 

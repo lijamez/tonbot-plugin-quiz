@@ -1,8 +1,10 @@
 package net.tonbot.plugin.trivia.musicid;
 
+import java.util.Optional;
+
 import org.jaudiotagger.tag.FieldKey;
 
-public enum Tag {
+public enum SongProperty {
 	COMPOSER("Composer", FieldKey.COMPOSER),
 	TITLE("Title", FieldKey.TITLE),
 	ALBUM("Album", FieldKey.ALBUM),
@@ -11,7 +13,7 @@ public enum Tag {
 	private final String friendlyName;
 	private final FieldKey fieldKey;
 	
-	private Tag(String friendlyName, FieldKey fieldKey) {
+	private SongProperty(String friendlyName, FieldKey fieldKey) {
 		this.friendlyName = friendlyName;
 		this.fieldKey = fieldKey;
 	}
@@ -20,7 +22,11 @@ public enum Tag {
 		return friendlyName;
 	}
 	
-	public FieldKey getFieldKey() {
-		return fieldKey;
+	/**
+	 * Gets the {@link FieldKey} associated with {@link SongProperty}, if it exists.
+	 * @return A {@link FieldKey}, if applicable.
+	 */
+	public Optional<FieldKey> getFieldKey() {
+		return Optional.ofNullable(fieldKey);
 	}
 }

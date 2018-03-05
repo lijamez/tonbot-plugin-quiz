@@ -7,7 +7,7 @@ import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate
 import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate
 import net.tonbot.plugin.trivia.model.QuestionTemplateBundle
 import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate
-import net.tonbot.plugin.trivia.musicid.Tag
+import net.tonbot.plugin.trivia.musicid.SongProperty
 import spock.lang.Specification
 
 class QuestionTemplateBundleTest extends Specification {
@@ -81,7 +81,7 @@ class QuestionTemplateBundleTest extends Specification {
 					.build(),
 				MusicIdQuestionTemplate.builder()
 					.audioPath("mySong.mp3")
-					.tags([Tag.TITLE] as Set)
+					.tags([SongProperty.TITLE] as Set)
 					.build()
 				])
 			.build()

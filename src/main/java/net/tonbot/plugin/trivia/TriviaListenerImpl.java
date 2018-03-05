@@ -34,7 +34,7 @@ import net.tonbot.plugin.trivia.model.TriviaMetadata;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
 import net.tonbot.plugin.trivia.musicid.SongMetadata;
-import net.tonbot.plugin.trivia.musicid.Tag;
+import net.tonbot.plugin.trivia.musicid.SongProperty;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.obj.ReactionEmoji;
 import sx.blah.discord.handle.obj.IChannel;
@@ -51,11 +51,11 @@ class TriviaListenerImpl implements TriviaListener {
 
 	private static final Logger LOG = LoggerFactory.getLogger(TriviaListenerImpl.class);
 	
-	private static final List<Tag> MUSIC_ID_QUESTION_END_SONG_FIELDS = ImmutableList.of(
-			Tag.TITLE,
-			Tag.ALBUM,
-			Tag.ARTIST,
-			Tag.COMPOSER);
+	private static final List<SongProperty> MUSIC_ID_QUESTION_END_SONG_FIELDS = ImmutableList.of(
+			SongProperty.TITLE,
+			SongProperty.ALBUM,
+			SongProperty.ARTIST,
+			SongProperty.COMPOSER);
 	
 	private static final long FINAL_RESULTS_TTL = 60;
 	private static final TimeUnit FINAL_RESULTS_TTL_UNIT = TimeUnit.SECONDS;
@@ -295,7 +295,7 @@ class TriviaListenerImpl implements TriviaListener {
 		Win win = multipleChoiceQuestionEndEvent.getWin().orElse(null);
 		Choice correctChoice = multipleChoiceQuestionEndEvent.getCorrectChoice();
 
-		String msg = getStandardRoundEndMessage(win, correctChoice.getValue());
+		String msg = getStandardRoundEndMessage(win, ImmutableList.of(correctChoice.getValue()));
 
 		IMessage message = botUtils.sendMessageSync(channel, msg);
 		deletableMessages.add(message);
@@ -334,8 +334,7 @@ class TriviaListenerImpl implements TriviaListener {
 		Win win = shortAnswerQuestionEndEvent.getWin().orElse(null);
 		String acceptableAnswer = shortAnswerQuestionEndEvent.getAcceptableAnswer();
 
-		String msg = getStandardRoundEndMessage(win,
-				win != null ? win.getWinningMessage().getMessage() : acceptableAnswer);
+		String msg = getStandardRoundEndMessage(win, ImmutableList.of(acceptableAnswer));
 
 		IMessage message = botUtils.sendMessageSync(channel, msg);
 		deletableMessages.add(message);
@@ -353,7 +352,7 @@ class TriviaListenerImpl implements TriviaListener {
 		EmbedBuilder eb = getQuestionEmbedBuilder(musicIdQuestionStartEvent);
 		
 		String question = null;
-		switch (musicIdQuestionStartEvent.getTagToAsk()) {
+		switch (musicIdQuestionStartEvent.getPropertyToAsk()) {
 		case TITLE:
 			question = "What is the title of this track?";
 			break;
@@ -364,7 +363,7 @@ class TriviaListenerImpl implements TriviaListener {
 			question = "Who is the composer of this track?";
 			break;
 		default:
-			question = "What is the " + musicIdQuestionStartEvent.getTagToAsk().getFriendlyName() + " of this track?";
+			question = "What is the " + musicIdQuestionStartEvent.getPropertyToAsk().getFriendlyName() + " of this track?";
 			break;
 		}
 		eb.withTitle("🎵 " + question);
@@ -383,23 +382,22 @@ class TriviaListenerImpl implements TriviaListener {
 		Optional<File> audioCue = win != null ? audioCues.getSuccess() : audioCues.getFailure();
 		audioCue.ifPresent(audioManager::playInVC);
 		
-		String canonicalAnswer = musicIdQuestionEndEvent.getCanonicalAnswer();
+		List<String> answers = musicIdQuestionEndEvent.getAnswers();
 
 		StringBuilder sb = new StringBuilder();
 		
 		// The standard "round end" message.
-		String stdMessage = getStandardRoundEndMessage(win,
-				win != null ? win.getWinningMessage().getMessage() : canonicalAnswer);
+		String stdMessage = getStandardRoundEndMessage(win, answers);
 		sb.append(stdMessage);
 		
 		// Add some song metadata to the message.
 		sb.append("\n\n");
 		SongMetadata sm = musicIdQuestionEndEvent.getSongMetadata();
 		MUSIC_ID_QUESTION_END_SONG_FIELDS.stream()
-			.forEach(tag -> {
-				String value = sm.getTags().get(tag);
-				if (value != null) {
-					sb.append("**").append(tag.getFriendlyName()).append("** ").append(value).append("\n");
+			.forEach(property -> {
+				String propertyValue = sm.getProperties().get(property);
+				if (propertyValue != null) {
+					sb.append(String.format("**%s** %s\n", property.getFriendlyName(), propertyValue));
 				}
 			});
 
@@ -505,16 +503,27 @@ class TriviaListenerImpl implements TriviaListener {
 		return eb;
 	}
 
-	private String getStandardRoundEndMessage(Win win, String correctAnswer) {
+	private String getStandardRoundEndMessage(Win win, List<String> correctAnswers) {
 		String msg;
 		if (win == null) {
-			msg = String.format(":alarm_clock: Time's up! The correct answer was: **%s**",
-					correctAnswer);
+			StringBuilder sb = new StringBuilder();
+			
+			sb.append(":alarm_clock: Time's up! ");
+			
+			if (correctAnswers.size() > 1) {
+				sb.append(String.format("The correct answer could be one of: **%s**", StringUtils.join(correctAnswers, ", ")));
+			} else {
+				sb.append(String.format("The correct answer was: **%s**", correctAnswers.get(0)));
+			}
+			
+			msg = sb.toString();
 		} else {
 			IUser user = discordClient.fetchUser(win.getWinnerUserId());
+			String winningUserMessage = win.getWinningMessage().getMessage();
+			
 			StringBuilder sb = new StringBuilder();
 			sb.append(String.format("**%s** wins %d point(s) for the answer ``%s``",
-					user.getDisplayName(channel.getGuild()), win.getPointsAwarded(), correctAnswer));
+					user.getDisplayName(channel.getGuild()), win.getPointsAwarded(), winningUserMessage));
 
 			if (win.getIncorrectAttempts() > 0) {
 				sb.append(" after ").append(win.getIncorrectAttempts());
@@ -525,6 +534,11 @@ class TriviaListenerImpl implements TriviaListener {
 				}
 			}
 			sb.append(".");
+			
+			if (correctAnswers.size() > 1) {
+				sb.append(String.format("\n\nAcceptable answers were: %s", StringUtils.join(correctAnswers, ", ")));
+			}
+			
 			msg = sb.toString();
 		}
 

@@ -1,34 +1,14 @@
 package net.tonbot.plugin.trivia;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import org.jaudiotagger.audio.AudioFile;
-import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
-import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
-import org.jaudiotagger.tag.KeyNotFoundException;
-import org.jaudiotagger.tag.TagException;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate;
 import net.tonbot.plugin.trivia.model.QuestionTemplate;
 import net.tonbot.plugin.trivia.model.TriviaTopic;
-import net.tonbot.plugin.trivia.musicid.Tag;
 
 class TriviaTopicSanityChecker {
-
-	private final AudioFileIO audioFileIO;
-	
-	@Inject
-	public TriviaTopicSanityChecker(AudioFileIO audioFileIO) {
-		this.audioFileIO = Preconditions.checkNotNull(audioFileIO, "audioFileIO must be non-null.");
-	}
 	
 	/**
 	 * Sanity checks the trivia topic. Specifically, it looks for the following:
@@ -82,7 +62,6 @@ class TriviaTopicSanityChecker {
 			MusicIdQuestionTemplate musicIdQuestionTemplate = ((MusicIdQuestionTemplate) q);
 			
 			checkAudioFileExistence(musicIdQuestionTemplate, triviaTopic, triviaTopicDir);
-			checkAudioFileHasAllRequiredTags(musicIdQuestionTemplate, triviaTopic, triviaTopicDir);
 		}
 	}
 	
@@ -96,28 +75,6 @@ class TriviaTopicSanityChecker {
 		if (!audioFile.exists()) {
 			throw new TriviaTopicSanityException("Trivia Topic " + triviaTopic.getMetadata().getName()
 					+ " uses an non-existent file at " + relativePath);
-		}
-	}
-	
-	private void checkAudioFileHasAllRequiredTags(MusicIdQuestionTemplate q, TriviaTopic triviaTopic, File triviaTopicDir) {
-		AudioFile audioFile;
-		try {
-			audioFile = audioFileIO.readFile(new File(triviaTopicDir, q.getAudioPath()));
-		} catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
-			throw new TriviaTopicSanityException("Unable to perform sanity check on a music ID question with audio file " + q.getAudioPath(), e);
-		}
-		
-		for (Tag tag : q.getTags()) {
-			List<String> tagValues = ImmutableList.of();
-			try {
-				tagValues = audioFile.getTag()
-						.getAll(tag.getFieldKey());
-			} catch (KeyNotFoundException e) { }
-			
-			if (tagValues.isEmpty()) {
-				throw new TriviaTopicSanityException("Trivia Topic " + triviaTopic.getMetadata().getName()
-						+ " has a question which asks of " + tag + " for " + q.getAudioPath() + " but the file doesn't have that tag.");
-			}
 		}
 	}
 }

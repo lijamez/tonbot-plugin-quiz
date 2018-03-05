@@ -1,7 +1,5 @@
 package net.tonbot.plugin.trivia;
 
-import java.util.Random;
-
 import org.jaudiotagger.audio.AudioFileIO;
 
 import com.google.common.base.Preconditions;
@@ -16,12 +14,10 @@ import net.tonbot.plugin.trivia.musicid.MusicIdQuestionHandler;
 class QuestionHandlers {
 
 	private final AudioFileIO audioFileIO;
-	private final Random random;
 	
 	@Inject
-	public QuestionHandlers(AudioFileIO audioFileIO, Random random) {
+	public QuestionHandlers(AudioFileIO audioFileIO) {
 		this.audioFileIO = Preconditions.checkNotNull(audioFileIO, "audioFileIO must be non-null.");
-		this.random = Preconditions.checkNotNull(random, "random must be non-null.");
 	}
 	
 	public QuestionHandler get(QuestionTemplate question, TriviaConfiguration config, TriviaListener listener, LoadedTrivia loadedTrivia) {
@@ -33,7 +29,7 @@ class QuestionHandlers {
 		} else if (question instanceof ShortAnswerQuestionTemplate) {
 			return new ShortAnswerQuestionHandler((ShortAnswerQuestionTemplate) question, listener, loadedTrivia);
 		} else if (question instanceof MusicIdQuestionTemplate) {
-			return new MusicIdQuestionHandler((MusicIdQuestionTemplate) question, config, listener, random, audioFileIO, loadedTrivia);
+			return new MusicIdQuestionHandler((MusicIdQuestionTemplate) question, config, listener, audioFileIO, loadedTrivia);
 		} else {
 			throw new IllegalArgumentException("Unsupported question type: " + question.getClass().getName());
 		}

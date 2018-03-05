@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate
-import net.tonbot.plugin.trivia.musicid.Tag
+import net.tonbot.plugin.trivia.musicid.SongProperty
 import spock.lang.Specification
 
 class MusicIdQuestionTemplateTest extends Specification {
@@ -33,8 +33,8 @@ class MusicIdQuestionTemplateTest extends Specification {
 			.points(5)
 			.audioPath("test.mp3")
 			.tags([
-				Tag.TITLE,
-				Tag.ALBUM
+				SongProperty.TITLE,
+				SongProperty.ALBUM
 			] as Set)
 			.build()
 		

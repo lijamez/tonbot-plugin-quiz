@@ -305,10 +305,7 @@ class TriviaSession {
 			this.scorekeeper.endQuestion();
 
 			this.scheduledTaskRunner.cancel();
-			this.state = TriviaSessionState.ENDED;
 
-			triviaSessionManager.sessionHasEnded(this);
-			
 			RoundEndEvent roundEndEvent = RoundEndEvent.builder()
 					.scorekeepingRecords(this.scorekeeper.getRecords())
 					.loadedTrivia(trivia)
@@ -316,7 +313,11 @@ class TriviaSession {
 					.build();
 			
 			listener.onRoundEnd(roundEndEvent);
+			
+			
 		} finally {
+			this.state = TriviaSessionState.ENDED;
+			triviaSessionManager.sessionHasEnded(this);
 			lock.unlock();
 		}
 	}

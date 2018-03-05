@@ -10,10 +10,10 @@ import lombok.Data;
 @Data
 public class SongMetadata {
 
-	private final Map<Tag, String> tags;
+	private final Map<SongProperty, String> properties;
 	
 	@Builder
-	private SongMetadata(Map<Tag, String> tags) {
-		this.tags = Preconditions.checkNotNull(tags, "tags must be non-null.");
+	private SongMetadata(Map<SongProperty, String> properties) {
+		this.properties = Preconditions.checkNotNull(properties, "properties must be non-null.");
 	}
 }
