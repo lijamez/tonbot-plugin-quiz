@@ -8,7 +8,9 @@ public enum SongProperty {
 	COMPOSER("Composer", FieldKey.COMPOSER),
 	TITLE("Title", FieldKey.TITLE),
 	ALBUM("Album", FieldKey.ALBUM),
-	ARTIST("Artist", FieldKey.ARTIST);
+	ARTIST("Artist", FieldKey.ARTIST),
+	FEATURED_VOCALIST("Featured Vocalist", null);;
+	
 	
 	private final String friendlyName;
 	private final FieldKey fieldKey;

@@ -357,10 +357,13 @@ class TriviaListenerImpl implements TriviaListener {
 			question = "What is the title of this track?";
 			break;
 		case ALBUM:
-			question = "What album did this track come from?";
+			question = "Which album did this track come from?";
 			break;
 		case COMPOSER:
 			question = "Who is the composer of this track?";
+			break;
+		case FEATURED_VOCALIST:
+			question = "Who is a featured vocalist of this track?";
 			break;
 		default:
 			question = "What is the " + musicIdQuestionStartEvent.getPropertyToAsk().getFriendlyName() + " of this track?";
