@@ -1,6 +1,7 @@
 package net.tonbot.plugin.trivia.model;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -9,9 +10,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import lombok.Builder;
 import lombok.Data;
+import net.tonbot.plugin.trivia.musicid.SongProperty;
 
 @Data
 public class TriviaMetadata {
@@ -24,6 +27,7 @@ public class TriviaMetadata {
 	private final long defaultTimePerQuestion; //in ms
 	private final List<List<String>> synonyms;
 	private final AudioCues audioCues;
+	private final Map<SongProperty, Long> songPropertyWeights;
 
 	@Builder
 	@JsonCreator
@@ -35,7 +39,8 @@ public class TriviaMetadata {
 			@JsonProperty("defaultQuestionsPerRound") int defaultQuestionsPerRound,
 			@JsonProperty("defaultTimePerQuestion") long defaultTimePerQuestion,
 			@JsonProperty("synonyms") List<List<String>> synonyms,
-			@JsonProperty("audioCues") AudioCues audioCues) {
+			@JsonProperty("audioCues") AudioCues audioCues,
+			@JsonProperty("songPropertyWeights") Map<SongProperty, Long> songPropertyWeights) {
 		Preconditions.checkArgument(!StringUtils.isBlank(name), "name must not be blank.");
 		Preconditions.checkArgument(!StringUtils.isBlank(version), "version must not be blank.");
 		Preconditions.checkArgument(!StringUtils.isBlank(description), "description must not be blank.");
@@ -50,6 +55,7 @@ public class TriviaMetadata {
 		this.defaultTimePerQuestion = defaultTimePerQuestion;
 		this.synonyms = synonyms == null ? ImmutableList.of() : ImmutableList.copyOf(synonyms);
 		this.audioCues = audioCues;
+		this.songPropertyWeights = songPropertyWeights == null ? ImmutableMap.of() : ImmutableMap.copyOf(songPropertyWeights);
 	}
 	
 	public Optional<AudioCues> getAudioCues() {

@@ -186,6 +186,8 @@ class TriviaSession {
 							LOG.error("Question timeout task has unexpectedly thrown an exception.", e);
 						}
 					}, config.getDefaultTimePerQuestion(), TimeUnit.MILLISECONDS);
+				} catch (Exception e) {
+					LOG.error("Next question task has unexpectedly thrown an exception.", e);
 				} finally {
 					lock.unlock();
 				}

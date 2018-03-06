@@ -2,9 +2,8 @@ package net.tonbot.plugin.trivia.musicid;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,8 +16,6 @@ import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.TagException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -31,55 +28,57 @@ import net.tonbot.plugin.trivia.QuestionHandler;
 import net.tonbot.plugin.trivia.TriviaConfiguration;
 import net.tonbot.plugin.trivia.TriviaListener;
 import net.tonbot.plugin.trivia.UserMessage;
+import net.tonbot.plugin.trivia.WeightedRandomPicker;
 import net.tonbot.plugin.trivia.Win;
 import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate;
 import net.tonbot.plugin.trivia.model.SongPropertyData;
 
 public class MusicIdQuestionHandler implements QuestionHandler {
-
-	private static final Logger LOG = LoggerFactory.getLogger(MusicIdQuestionHandler.class);
 	
 	private final MusicIdQuestionTemplate questionTemplate;
 	private final TriviaListener listener;
 	private final FuzzyMatcher fuzzyMatcher;
 	private final PropertyValues askingTagValues;
 	private final AudioFile audioFile;
+	private final WeightedRandomPicker randomPicker;
 	
 	public MusicIdQuestionHandler(
 			MusicIdQuestionTemplate questionTemplate, 
 			TriviaConfiguration config,
 			TriviaListener listener,
 			AudioFileIO audioFileIO, 
-			LoadedTrivia loadedTrivia) {
+			LoadedTrivia loadedTrivia,
+			WeightedRandomPicker randomPicker) {
 		this.questionTemplate = Preconditions.checkNotNull(questionTemplate, "questionTemplate must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
 		Preconditions.checkNotNull(audioFileIO, "audioFileIO must be non-null.");
 		Preconditions.checkNotNull(loadedTrivia, "loadedTrivia must be non-null.");
+		this.randomPicker = Preconditions.checkNotNull(randomPicker, "randomPicker must be non-null.");
 		this.fuzzyMatcher = new FuzzyMatcher(loadedTrivia.getTriviaTopic().getMetadata().getSynonyms());
 		this.audioFile = getAudioFile(audioFileIO, questionTemplate, loadedTrivia);
-		this.askingTagValues = getRandomUsableTagValues(questionTemplate, audioFile);
+		this.askingTagValues = getRandomUsableTagValues(questionTemplate, audioFile, loadedTrivia);
 	}
 	
-	private PropertyValues getRandomUsableTagValues(MusicIdQuestionTemplate qt, AudioFile audioFile) {
+	private PropertyValues getRandomUsableTagValues(MusicIdQuestionTemplate qt, AudioFile audioFile, LoadedTrivia loadedTrivia) {
 		
-		List<SongProperty> properties = new ArrayList<>(qt.getProperties().keySet());
-		Collections.shuffle(properties);
+		Map<SongProperty, Long> propertyWeights = loadedTrivia.getTriviaTopic().getMetadata().getSongPropertyWeights();
 		
-		for (SongProperty propertyToAsk : properties) {
-			List<String> answers = getAnswers(propertyToAsk, qt);
-			
-			if (answers.isEmpty()) {
-				LOG.warn("The question with audio file " + audioFile.getFile().getAbsolutePath() 
-						+ " doesn't contain any possible answers for property " + propertyToAsk);
-				continue;
-			}
-			
-			return new PropertyValues(propertyToAsk, answers);
+		Map<SongProperty, Long> qtPropertyWeights = new HashMap<>();
+		
+		for (SongProperty sp : qt.getProperties().keySet()) {
+			qtPropertyWeights.put(sp, propertyWeights.getOrDefault(sp, null));
 		}
 		
-		throw new IllegalStateException("Unable to find a suitable property to ask for audio file " + audioFile.getFile().getAbsolutePath() 
-				+ ". These have been tried: " + qt.getProperties().keySet());
-
+		SongProperty propertyToAsk = randomPicker.pick(qtPropertyWeights);
+		
+		List<String> answers = getAnswers(propertyToAsk, qt);
+		
+		if (answers.isEmpty()) {
+			throw new IllegalStateException("Unable to find any answers for property " + propertyToAsk 
+					+ "  for audio file " + audioFile.getFile().getAbsolutePath());	
+		}
+		
+		return new PropertyValues(propertyToAsk, answers);
 	}
 	
 	List<String> getAnswers(SongProperty propertyToAsk, MusicIdQuestionTemplate qt) {
