@@ -28,13 +28,18 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.tonbot.common.BotUtils;
 import net.tonbot.common.TonbotBusinessException;
 import net.tonbot.plugin.trivia.model.Choice;
-import net.tonbot.plugin.trivia.model.MultipleChoiceQuestionTemplate;
-import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
+import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestion;
+import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestionEndEvent;
+import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestionStartEvent;
+import net.tonbot.plugin.trivia.musicid.MusicIdQuestion;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
 import net.tonbot.plugin.trivia.musicid.SongMetadata;
 import net.tonbot.plugin.trivia.musicid.SongProperty;
+import net.tonbot.plugin.trivia.shortanswer.ShortAnswerQuestion;
+import net.tonbot.plugin.trivia.shortanswer.ShortAnswerQuestionEndEvent;
+import net.tonbot.plugin.trivia.shortanswer.ShortAnswerQuestionStartEvent;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.obj.ReactionEmoji;
 import sx.blah.discord.handle.obj.IChannel;
@@ -259,25 +264,24 @@ class TriviaListenerImpl implements TriviaListener {
 		purgeDeletableMessagesAsync();
 		
 		EmbedBuilder eb = getQuestionEmbedBuilder(multipleChoiceQuestionStartEvent);
-		MultipleChoiceQuestionTemplate mcQuestion = multipleChoiceQuestionStartEvent
-				.getMultipleChoiceQuestion();
+		MultipleChoiceQuestion mcQuestion = multipleChoiceQuestionStartEvent.getQuestion();
 		eb.withColor(accentColor);
 		
-		String questionText = mcQuestion.getQuestion();
+		String query = mcQuestion.getQuery();
 		
-		int newlineIndex = questionText.indexOf('\n');
+		int newlineIndex = query.indexOf('\n');
 		if (newlineIndex > 0) {
-			String mainQuestion = questionText.substring(0, newlineIndex);
-			String extra = questionText.substring(newlineIndex, questionText.length());
+			String mainQuestion = query.substring(0, newlineIndex);
+			String extra = query.substring(newlineIndex, query.length());
 			eb.withTitle(mainQuestion);
 			eb.withDescription(extra);
 		} else {
-			eb.withTitle(mcQuestion.getQuestion());
+			eb.withTitle(query);
 		}
 		
 
 		StringBuilder choicesSb = new StringBuilder();
-		List<Choice> choices = multipleChoiceQuestionStartEvent.getChoices();
+		List<Choice> choices = mcQuestion.getChoices();
 		for (int i = 0; i < choices.size(); i++) {
 			Choice choice = choices.get(i);
 			choicesSb.append(String.format("``%d``: %s\n", i, choice.getValue()));
@@ -295,7 +299,7 @@ class TriviaListenerImpl implements TriviaListener {
 		Win win = multipleChoiceQuestionEndEvent.getWin().orElse(null);
 		Choice correctChoice = multipleChoiceQuestionEndEvent.getCorrectChoice();
 
-		String msg = getStandardRoundEndMessage(win, ImmutableList.of(correctChoice.getValue()));
+		String msg = getStandardRoundEndMessage(win, ImmutableList.of(correctChoice.getValue()), correctChoice.getValue());
 
 		IMessage message = botUtils.sendMessageSync(channel, msg);
 		deletableMessages.add(message);
@@ -307,21 +311,21 @@ class TriviaListenerImpl implements TriviaListener {
 		purgeDeletableMessagesAsync();
 		
 		EmbedBuilder eb = getQuestionEmbedBuilder(shortAnswerQuestionStartEvent);
-		ShortAnswerQuestionTemplate saQuestion = shortAnswerQuestionStartEvent
-				.getShortAnswerQuestion();
+		ShortAnswerQuestion question = shortAnswerQuestionStartEvent
+				.getQuestion();
 
 		// If the question has newlines, put everything up to the first newline
 		// character in the embed's title.
 		// The rest does in the embed's description.
-		String question = saQuestion.getQuestion();
-		int newlineIndex = question.indexOf('\n');
+		String query = question.getQuery();
+		int newlineIndex = query.indexOf('\n');
 		if (newlineIndex >= 0) {
-			String mainQuestion = question.substring(0, newlineIndex);
-			String extra = question.substring(newlineIndex, question.length());
+			String mainQuestion = query.substring(0, newlineIndex);
+			String extra = query.substring(newlineIndex, query.length());
 			eb.withTitle(mainQuestion);
 			eb.withDescription(extra);
 		} else {
-			eb.withTitle(saQuestion.getQuestion());
+			eb.withTitle(query);
 		}
 
 		IMessage message = sendQuestionEmbed(eb, shortAnswerQuestionStartEvent);
@@ -334,7 +338,7 @@ class TriviaListenerImpl implements TriviaListener {
 		Win win = shortAnswerQuestionEndEvent.getWin().orElse(null);
 		String acceptableAnswer = shortAnswerQuestionEndEvent.getAcceptableAnswer();
 
-		String msg = getStandardRoundEndMessage(win, ImmutableList.of(acceptableAnswer));
+		String msg = getStandardRoundEndMessage(win, ImmutableList.of(acceptableAnswer), null);
 
 		IMessage message = botUtils.sendMessageSync(channel, msg);
 		deletableMessages.add(message);
@@ -344,32 +348,34 @@ class TriviaListenerImpl implements TriviaListener {
 	public void onMusicIdQuestionStart(MusicIdQuestionStartEvent musicIdQuestionStartEvent) {
 		purgeDeletableMessagesAsync();
 		
-		AudioTrack audioTrack = audioManager.findTrack(musicIdQuestionStartEvent.getAudioFile());
+		MusicIdQuestion question = musicIdQuestionStartEvent.getQuestion();
+		
+		AudioTrack audioTrack = audioManager.findTrack(question.getAudioFile());
 		long maxPosition = Math.max(audioTrack.getDuration() - musicIdQuestionStartEvent.getMaxDurationMs(), 0);
 		long randomPosition = (long) (Math.random() * maxPosition);
 		audioManager.playInVC(audioTrack, randomPosition);
 		
 		EmbedBuilder eb = getQuestionEmbedBuilder(musicIdQuestionStartEvent);
 		
-		String question = null;
-		switch (musicIdQuestionStartEvent.getPropertyToAsk()) {
+		String query;
+		switch (question.getPropertyToAsk()) {
 		case TITLE:
-			question = "What is the title of this track?";
+			query = "What is the title of this track?";
 			break;
 		case ALBUM:
-			question = "Which album did this track come from?";
+			query = "Which album did this track come from?";
 			break;
 		case COMPOSER:
-			question = "Who is the composer of this track?";
+			query = "Who is the composer of this track?";
 			break;
 		case FEATURED_VOCALIST:
-			question = "Who is a featured vocalist of this track?";
+			query = "Who is a featured vocalist of this track?";
 			break;
 		default:
-			question = "What is the " + musicIdQuestionStartEvent.getPropertyToAsk().getFriendlyName() + " of this track?";
+			query = "What is the " + question.getPropertyToAsk().getFriendlyName() + " of this track?";
 			break;
 		}
-		eb.withTitle("🎵 " + question);
+		eb.withTitle("🎵 " + query);
 		
 		LOG.info(musicIdQuestionStartEvent.toString());
 		IMessage message = botUtils.sendEmbedSync(channel, eb.build());
@@ -385,12 +391,12 @@ class TriviaListenerImpl implements TriviaListener {
 		Optional<File> audioCue = win != null ? audioCues.getSuccess() : audioCues.getFailure();
 		audioCue.ifPresent(audioManager::playInVC);
 		
-		List<String> answers = musicIdQuestionEndEvent.getAnswers();
+		List<String> answers = musicIdQuestionEndEvent.getQuestion().getAnswers();
 
 		StringBuilder sb = new StringBuilder();
 		
 		// The standard "round end" message.
-		String stdMessage = getStandardRoundEndMessage(win, answers);
+		String stdMessage = getStandardRoundEndMessage(win, answers, null);
 		sb.append(stdMessage);
 		
 		// Add some song metadata to the message.
@@ -458,8 +464,8 @@ class TriviaListenerImpl implements TriviaListener {
 	 *            The {@link QuestionStartEvent}. Non-null.
 	 * @return The sent embed message.
 	 */
-	private IMessage sendQuestionEmbed(EmbedBuilder eb, QuestionStartEvent qse) {
-		File imageFile = qse.getImage().orElse(null);
+	private IMessage sendQuestionEmbed(EmbedBuilder eb, QuestionStartEvent<?> qse) {
+		File imageFile = qse.getQuestion().getImage().orElse(null);
 
 		if (imageFile != null) {
 			String extension = FilenameUtils.getExtension(imageFile.getName());
@@ -490,7 +496,7 @@ class TriviaListenerImpl implements TriviaListener {
 	 *            {@link QuestionStartEvent}. Non-null.
 	 * @return A {@link EmbedBuilder} with some settings already set.
 	 */
-	private EmbedBuilder getQuestionEmbedBuilder(QuestionStartEvent qse) {
+	private EmbedBuilder getQuestionEmbedBuilder(QuestionStartEvent<?> qse) {
 		EmbedBuilder eb = new EmbedBuilder();
 
 		eb.withColor(accentColor);
@@ -506,7 +512,7 @@ class TriviaListenerImpl implements TriviaListener {
 		return eb;
 	}
 
-	private String getStandardRoundEndMessage(Win win, List<String> correctAnswers) {
+	private String getStandardRoundEndMessage(Win win, List<String> correctAnswers, String overrideUserAnswer) {
 		String msg;
 		if (win == null) {
 			StringBuilder sb = new StringBuilder();
@@ -522,7 +528,7 @@ class TriviaListenerImpl implements TriviaListener {
 			msg = sb.toString();
 		} else {
 			IUser user = discordClient.fetchUser(win.getWinnerUserId());
-			String winningUserMessage = win.getWinningMessage().getMessage();
+			String winningUserMessage = overrideUserAnswer == null ? win.getWinningMessage().getMessage() : overrideUserAnswer;
 			
 			StringBuilder sb = new StringBuilder();
 			sb.append(String.format("**%s** wins %d point(s) for the answer ``%s``",

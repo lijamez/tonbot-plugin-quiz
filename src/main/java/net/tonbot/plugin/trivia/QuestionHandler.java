@@ -1,10 +1,17 @@
 package net.tonbot.plugin.trivia;
 
-import java.io.File;
 import java.util.Optional;
 
-public interface QuestionHandler {
+import net.tonbot.plugin.trivia.model.Question;
 
+public interface QuestionHandler {
+	
+	/**
+	 * Gets the question.
+	 * @return The {@link Question}.
+	 */
+	Question getQuestion();
+	
 	/**
 	 * 
 	 * @param questionNumber
@@ -13,10 +20,8 @@ public interface QuestionHandler {
 	 *            The total number of questions to be asked.
 	 * @param maxDurationMs
 	 *            The maximum amount of time that will be waited in milliseconds.
-	 * @param imageFile
-	 *            Image file. Nullable.
 	 */
-	void notifyStart(long questionNumber, long totalQuestions, long maxDurationMs, File imageFile);
+	void notifyStart(long questionNumber, long totalQuestions, long maxDurationMs);
 
 	/**
 	 * Checks whether if the user's message answers the question.

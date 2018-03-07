@@ -17,6 +17,7 @@ import com.google.common.base.Preconditions;
 import net.tonbot.common.TonbotBusinessException;
 import net.tonbot.plugin.trivia.model.AudioCues;
 import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate;
+import net.tonbot.plugin.trivia.model.Question;
 import net.tonbot.plugin.trivia.model.QuestionTemplate;
 
 /**
@@ -26,7 +27,7 @@ class TriviaSession {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(TriviaSession.class);
 
-	private static final long ROUND_START_DELAY_MS = 15000;
+	private static final long ROUND_START_DELAY_MS = 12000;
 	private static final long PRE_QUESTION_DELAY_MS = 8000;
 	
 	private final TriviaSessionManager triviaSessionManager;
@@ -166,16 +167,20 @@ class TriviaSession {
 				lock.lock();
 				try {
 					state = TriviaSessionState.WAITING_FOR_ANSWER;
-					QuestionTemplate nextQuestion = pickRandomElement(this.availableQuestionTemplates);
-					this.availableQuestionTemplates.remove(nextQuestion);
+					QuestionTemplate nextQuestionTemplate = pickRandomElement(this.availableQuestionTemplates);
+					this.availableQuestionTemplates.remove(nextQuestionTemplate);
 					this.numQuestionsAsked++;
-
-					File imageFile = getRandomImageFile(nextQuestion);
-
-					this.scorekeeper.setupQuestion(nextQuestion.getPoints());
-					this.currentQuestionHandler = questionHandlers.get(nextQuestion, config, listener, trivia);
+					
+					this.currentQuestionHandler = questionHandlers.get(nextQuestionTemplate, config, listener, trivia);
+					
+					Question question = currentQuestionHandler.getQuestion();
+					LOG.info("Asking question #{}: {}", numQuestionsAsked, question);
+					
+					this.scorekeeper.setupQuestion(question.getPoints());
+					
 					this.currentQuestionHandler.notifyStart(this.numQuestionsAsked, this.totalQuestionsToAsk,
-							config.getDefaultTimePerQuestion(), imageFile);
+							config.getDefaultTimePerQuestion());
+					
 					this.scheduledTaskRunner.replaceSchedule(() -> {
 						try {
 							timeoutQuestion();
@@ -252,18 +257,25 @@ class TriviaSession {
 					.getIncorrectAnswers();
 			long awardedPoints = this.scorekeeper.logCorrectAnswer(userAnswer.getUserId());
 
+			LOG.info("Player {} correct response: {}", userAnswer.getUserId(), userAnswer.getMessage());
+			
 			AnswerCorrectEvent answerCorrectEvent = AnswerCorrectEvent.builder()
-					.messageId(userAnswer.getMessageId()).build();
+					.messageId(userAnswer.getMessageId())
+					.build();
+			
 			this.listener.onAnswerCorrect(answerCorrectEvent);
 			this.currentQuestionHandler.notifyEnd(userAnswer, awardedPoints, incorrectAnswers);
-
+			
 			loadNextQuestionOrEnd(PRE_QUESTION_DELAY_MS);
 		} else {
 			// This user participated, so add them to the scores map if they are not already
 			// there.
 			this.scorekeeper.logIncorrectAnswer(userAnswer.getUserId());
 
-			AnswerIncorrectEvent event = AnswerIncorrectEvent.builder().messageId(userAnswer.getMessageId())
+			LOG.info("Player {} incorrect response: {}", userAnswer.getUserId(), userAnswer.getMessage());
+			
+			AnswerIncorrectEvent event = AnswerIncorrectEvent.builder()
+					.messageId(userAnswer.getMessageId())
 					.build();
 			listener.onAnswerIncorrect(event);
 		}
@@ -337,16 +349,6 @@ class TriviaSession {
 		this.state = TriviaSessionState.ENDED;
 		
 		triviaSessionManager.sessionHasEnded(this);
-	}
-
-	private File getRandomImageFile(QuestionTemplate q) {
-		File imageFile = null;
-		if (!q.getImagePaths().isEmpty()) {
-			String imagePath = q.getImagePaths().get(random.nextInt(q.getImagePaths().size()));
-			imageFile = new File(trivia.getTriviaTopicDir(), imagePath);
-		}
-
-		return imageFile;
 	}
 
 	private <T> T pickRandomElement(List<T> list) {

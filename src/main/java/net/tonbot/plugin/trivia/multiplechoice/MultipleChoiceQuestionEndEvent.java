@@ -1,15 +1,17 @@
-package net.tonbot.plugin.trivia;
+package net.tonbot.plugin.trivia.multiplechoice;
 
 import com.google.common.base.Preconditions;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import net.tonbot.plugin.trivia.QuestionEndEvent;
+import net.tonbot.plugin.trivia.Win;
 import net.tonbot.plugin.trivia.model.Choice;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-class MultipleChoiceQuestionEndEvent extends QuestionEndEvent {
+public class MultipleChoiceQuestionEndEvent extends QuestionEndEvent<MultipleChoiceQuestion> {
 
 	private final Choice correctChoice;
 
@@ -24,8 +26,8 @@ class MultipleChoiceQuestionEndEvent extends QuestionEndEvent {
 	 * 
 	 */
 	@Builder
-	private MultipleChoiceQuestionEndEvent(boolean timedOut, Win win, Choice correctChoice) {
-		super(timedOut, win);
+	private MultipleChoiceQuestionEndEvent(MultipleChoiceQuestion question, boolean timedOut, Win win, Choice correctChoice) {
+		super(question, timedOut, win);
 
 		this.correctChoice = Preconditions.checkNotNull(correctChoice, "correctChoice must be non-null.");
 	}

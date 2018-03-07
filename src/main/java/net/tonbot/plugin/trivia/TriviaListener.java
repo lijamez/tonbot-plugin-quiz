@@ -1,7 +1,11 @@
 package net.tonbot.plugin.trivia;
 
+import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestionEndEvent;
+import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestionStartEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
+import net.tonbot.plugin.trivia.shortanswer.ShortAnswerQuestionEndEvent;
+import net.tonbot.plugin.trivia.shortanswer.ShortAnswerQuestionStartEvent;
 
 public interface TriviaListener {
 	

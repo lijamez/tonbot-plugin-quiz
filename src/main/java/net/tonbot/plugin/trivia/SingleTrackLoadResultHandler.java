@@ -1,4 +1,4 @@
-package net.tonbot.plugin.trivia.musicid;
+package net.tonbot.plugin.trivia;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;

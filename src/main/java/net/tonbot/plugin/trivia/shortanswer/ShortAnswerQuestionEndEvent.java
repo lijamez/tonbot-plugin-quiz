@@ -1,14 +1,16 @@
-package net.tonbot.plugin.trivia;
+package net.tonbot.plugin.trivia.shortanswer;
 
 import com.google.common.base.Preconditions;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import net.tonbot.plugin.trivia.QuestionEndEvent;
+import net.tonbot.plugin.trivia.Win;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-class ShortAnswerQuestionEndEvent extends QuestionEndEvent {
+public class ShortAnswerQuestionEndEvent extends QuestionEndEvent<ShortAnswerQuestion> {
 
 	private final String acceptableAnswer;
 
@@ -22,8 +24,8 @@ class ShortAnswerQuestionEndEvent extends QuestionEndEvent {
 	 *            An acceptable answer. Non-null.
 	 */
 	@Builder
-	public ShortAnswerQuestionEndEvent(boolean timedOut, Win win, String acceptableAnswer) {
-		super(timedOut, win);
+	public ShortAnswerQuestionEndEvent(ShortAnswerQuestion question, boolean timedOut, Win win, String acceptableAnswer) {
+		super(question, timedOut, win);
 
 		this.acceptableAnswer = Preconditions.checkNotNull(acceptableAnswer, "acceptableAnswer must be non-null.");
 	}

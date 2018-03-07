@@ -3,8 +3,6 @@ package net.tonbot.plugin.trivia.musicid;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,104 +16,48 @@ import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.TagException;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
-import lombok.Data;
-import lombok.NonNull;
 import net.tonbot.plugin.trivia.FuzzyMatcher;
 import net.tonbot.plugin.trivia.LoadedTrivia;
 import net.tonbot.plugin.trivia.QuestionHandler;
 import net.tonbot.plugin.trivia.TriviaConfiguration;
 import net.tonbot.plugin.trivia.TriviaListener;
 import net.tonbot.plugin.trivia.UserMessage;
-import net.tonbot.plugin.trivia.WeightedRandomPicker;
 import net.tonbot.plugin.trivia.Win;
-import net.tonbot.plugin.trivia.model.MusicIdQuestionTemplate;
-import net.tonbot.plugin.trivia.model.SongPropertyData;
+import net.tonbot.plugin.trivia.model.Question;
 
 public class MusicIdQuestionHandler implements QuestionHandler {
 	
-	private final MusicIdQuestionTemplate questionTemplate;
+	private final MusicIdQuestion question;
 	private final TriviaListener listener;
 	private final FuzzyMatcher fuzzyMatcher;
-	private final PropertyValues askingTagValues;
-	private final AudioFile audioFile;
-	private final WeightedRandomPicker randomPicker;
+	private final AudioFileIO audioFileIO;
 	
 	public MusicIdQuestionHandler(
-			MusicIdQuestionTemplate questionTemplate, 
+			MusicIdQuestion question, 
 			TriviaConfiguration config,
 			TriviaListener listener,
-			AudioFileIO audioFileIO, 
 			LoadedTrivia loadedTrivia,
-			WeightedRandomPicker randomPicker) {
-		this.questionTemplate = Preconditions.checkNotNull(questionTemplate, "questionTemplate must be non-null.");
+			AudioFileIO audioFileIO) {
+		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
-		Preconditions.checkNotNull(audioFileIO, "audioFileIO must be non-null.");
 		Preconditions.checkNotNull(loadedTrivia, "loadedTrivia must be non-null.");
-		this.randomPicker = Preconditions.checkNotNull(randomPicker, "randomPicker must be non-null.");
 		this.fuzzyMatcher = new FuzzyMatcher(loadedTrivia.getTriviaTopic().getMetadata().getSynonyms());
-		this.audioFile = getAudioFile(audioFileIO, questionTemplate, loadedTrivia);
-		this.askingTagValues = getRandomUsableTagValues(questionTemplate, audioFile, loadedTrivia);
-	}
-	
-	private PropertyValues getRandomUsableTagValues(MusicIdQuestionTemplate qt, AudioFile audioFile, LoadedTrivia loadedTrivia) {
-		
-		Map<SongProperty, Long> propertyWeights = loadedTrivia.getTriviaTopic().getMetadata().getSongPropertyWeights();
-		
-		Map<SongProperty, Long> qtPropertyWeights = new HashMap<>();
-		
-		for (SongProperty sp : qt.getProperties().keySet()) {
-			qtPropertyWeights.put(sp, propertyWeights.getOrDefault(sp, null));
-		}
-		
-		SongProperty propertyToAsk = randomPicker.pick(qtPropertyWeights);
-		
-		List<String> answers = getAnswers(propertyToAsk, qt);
-		
-		if (answers.isEmpty()) {
-			throw new IllegalStateException("Unable to find any answers for property " + propertyToAsk 
-					+ "  for audio file " + audioFile.getFile().getAbsolutePath());	
-		}
-		
-		return new PropertyValues(propertyToAsk, answers);
-	}
-	
-	List<String> getAnswers(SongProperty propertyToAsk, MusicIdQuestionTemplate qt) {
-		SongPropertyData tagData = qt.getProperties().get(propertyToAsk);
-		
-		List<String> answers = tagData.getAnswers()
-			.orElseGet(() -> {
-				List<String> propertyValues = propertyToAsk.getFieldKey()
-						.map(fieldKey -> audioFile.getTag().getAll(fieldKey))
-						.orElse(ImmutableList.of());
-				
-				return propertyValues;
-			});
-		
-		return answers;
-	}
-	
-	private AudioFile getAudioFile(AudioFileIO audioFileIO, MusicIdQuestionTemplate questionTemplate, LoadedTrivia loadedTrivia) {
-		try {
-			AudioFile audioFile = audioFileIO.readFile(new File(loadedTrivia.getTriviaTopicDir(), questionTemplate.getAudioPath()));
-			return audioFile;
-		} catch (CannotReadException | IOException | TagException | ReadOnlyFileException
-				| InvalidAudioFrameException e) {
-			throw new IllegalStateException("Unable to read audio file at " + questionTemplate.getAudioPath(), e);
-		}
+		this.audioFileIO = Preconditions.checkNotNull(audioFileIO, "audioFileIO must be non-null.");
 	}
 
 	@Override
-	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationMs, File imageFile) {
+	public Question getQuestion() {
+		return question;
+	}
+	
+	@Override
+	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationMs) {
 		MusicIdQuestionStartEvent event = MusicIdQuestionStartEvent.builder()
-				.image(imageFile)
 				.questionNumber(questionNumber)
 				.totalQuestions(totalQuestions)
 				.maxDurationMs(maxDurationMs)
-				.question(questionTemplate)
-				.propertyToAsk(askingTagValues.getProperty())
-				.audioFile(audioFile.getFile())
+				.question(question)
 				.build();
 				
 		listener.onMusicIdQuestionStart(event);
@@ -125,7 +67,7 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 	public Optional<Boolean> checkCorrectness(UserMessage userMessage) {
 		String answer = userMessage.getMessage();
 		
-		boolean answerIsCorrect = fuzzyMatcher.matches(answer, askingTagValues.getAnswers());
+		boolean answerIsCorrect = fuzzyMatcher.matches(answer, question.getAnswers());
 		
 		return Optional.of(answerIsCorrect);
 	}
@@ -142,11 +84,10 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 					.build();
 		}
 		
-		SongMetadata songMetadata = getSongMetadataForEvent(audioFile);
+		SongMetadata songMetadata = getSongMetadataForEvent(question.getAudioFile());
 		
 		MusicIdQuestionEndEvent event = MusicIdQuestionEndEvent.builder()
-				.property(askingTagValues.getProperty())
-				.answers(askingTagValues.getAnswers())
+				.question(question)
 				.timedOut(userMessage == null)
 				.win(win)
 				.songMetadata(songMetadata)
@@ -155,25 +96,24 @@ public class MusicIdQuestionHandler implements QuestionHandler {
 		listener.onMusicIdQuestionEnd(event);
 	}
 	
-	private SongMetadata getSongMetadataForEvent(AudioFile af) {
-		Map<SongProperty, String> properties = Arrays.asList(SongProperty.values()).stream()
-				.filter(tag -> tag.getFieldKey().isPresent())
-				.filter(tag -> !StringUtils.isBlank(af.getTag().getFirst(tag.getFieldKey().get())))
-				.collect(Collectors.toMap(t -> t, t -> af.getTag().getFirst(t.getFieldKey().get())));
+	private SongMetadata getSongMetadataForEvent(File file) {
 		
-		SongMetadata sm = SongMetadata.builder()
-				.properties(properties)
-				.build();
-		
-		return sm;
-	}
-
-	@Data
-	private static class PropertyValues {
-		@NonNull
-		private final SongProperty property;
-		
-		@NonNull
-		private final List<String> answers;
+		try {
+			AudioFile af = audioFileIO.readFile(file);
+			
+			Map<SongProperty, String> properties = Arrays.asList(SongProperty.values()).stream()
+					.filter(tag -> tag.getFieldKey().isPresent())
+					.filter(tag -> !StringUtils.isBlank(af.getTag().getFirst(tag.getFieldKey().get())))
+					.collect(Collectors.toMap(t -> t, t -> af.getTag().getFirst(t.getFieldKey().get())));
+			
+			SongMetadata sm = SongMetadata.builder()
+					.properties(properties)
+					.build();
+			
+			return sm;
+		} catch (CannotReadException | IOException | TagException | ReadOnlyFileException
+				| InvalidAudioFrameException e) {
+			throw new IllegalStateException("Unable to read metadata from file " + file.getAbsolutePath(), e);
+		}
 	}
 }

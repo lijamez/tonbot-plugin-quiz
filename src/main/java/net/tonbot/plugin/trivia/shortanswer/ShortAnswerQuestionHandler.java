@@ -1,32 +1,42 @@
-package net.tonbot.plugin.trivia;
+package net.tonbot.plugin.trivia.shortanswer;
 
-import java.io.File;
 import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
-import net.tonbot.plugin.trivia.model.ShortAnswerQuestionTemplate;
+import net.tonbot.plugin.trivia.FuzzyMatcher;
+import net.tonbot.plugin.trivia.LoadedTrivia;
+import net.tonbot.plugin.trivia.QuestionHandler;
+import net.tonbot.plugin.trivia.TriviaListener;
+import net.tonbot.plugin.trivia.UserMessage;
+import net.tonbot.plugin.trivia.Win;
+import net.tonbot.plugin.trivia.model.Question;
 
-class ShortAnswerQuestionHandler implements QuestionHandler {
+public class ShortAnswerQuestionHandler implements QuestionHandler {
 
-	private final ShortAnswerQuestionTemplate question;
+	private final ShortAnswerQuestion question;
 	private final TriviaListener listener;
 	private final FuzzyMatcher fuzzyMatcher;
 
-	public ShortAnswerQuestionHandler(ShortAnswerQuestionTemplate question, TriviaListener listener, LoadedTrivia loadedTrivia) {
+	public ShortAnswerQuestionHandler(ShortAnswerQuestion question, TriviaListener listener, LoadedTrivia loadedTrivia) {
 		this.question = Preconditions.checkNotNull(question, "question must be non-null.");
 		this.listener = Preconditions.checkNotNull(listener, "listener must be non-null.");
 		this.fuzzyMatcher = new FuzzyMatcher(loadedTrivia.getTriviaTopic().getMetadata().getSynonyms());
 	}
+	
+	@Override
+	public Question getQuestion() {
+		return question;
+	}
 
 	@Override
-	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds, File imageFile) {
+	public void notifyStart(long questionNumber, long totalQuestions, long maxDurationSeconds) {
 		ShortAnswerQuestionStartEvent event = ShortAnswerQuestionStartEvent.builder()
-				.saQuestion(question)
+				.question(question)
 				.maxDurationSeconds(maxDurationSeconds)
 				.questionNumber(questionNumber)
 				.totalQuestions(totalQuestions)
-				.imageFile(imageFile).build();
+				.build();
 
 		listener.onShortAnswerQuestionStart(event);
 	}
@@ -41,6 +51,7 @@ class ShortAnswerQuestionHandler implements QuestionHandler {
 	@Override
 	public void notifyEnd(UserMessage userMessage, long pointsAwarded, long incorrectAttempts) {
 		ShortAnswerQuestionEndEvent event = ShortAnswerQuestionEndEvent.builder()
+				.question(question)
 				.acceptableAnswer(question.getAnswers().get(0))
 				.win(
 					userMessage != null

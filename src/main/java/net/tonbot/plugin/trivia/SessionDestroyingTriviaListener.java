@@ -7,8 +7,12 @@ import com.google.common.base.Preconditions;
 
 import net.tonbot.common.TonbotBusinessException;
 import net.tonbot.common.TonbotTechnicalFault;
+import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestionEndEvent;
+import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestionStartEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionEndEvent;
 import net.tonbot.plugin.trivia.musicid.MusicIdQuestionStartEvent;
+import net.tonbot.plugin.trivia.shortanswer.ShortAnswerQuestionEndEvent;
+import net.tonbot.plugin.trivia.shortanswer.ShortAnswerQuestionStartEvent;
 
 /**
  * A {@link TriviaListener} wrapper which destroys the {@link TriviaSession} if an exception is thrown by the wrapped listener.
