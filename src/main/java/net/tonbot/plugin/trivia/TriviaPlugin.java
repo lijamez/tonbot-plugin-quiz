@@ -11,6 +11,7 @@ import com.google.inject.TypeLiteral;
 import net.tonbot.common.Activity;
 import net.tonbot.common.TonbotPlugin;
 import net.tonbot.common.TonbotPluginArgs;
+import net.tonbot.plugin.trivia.db.TriviaPersistentStore;
 
 public class TriviaPlugin extends TonbotPlugin {
 
@@ -48,4 +49,9 @@ public class TriviaPlugin extends TonbotPlugin {
 		return "Trivia";
 	}
 
+	@Override
+	public void destroy() {
+		TriviaPersistentStore store = this.injector.getInstance(TriviaPersistentStore.class);
+		store.close();
+	}
 }

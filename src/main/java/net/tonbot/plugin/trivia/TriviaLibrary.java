@@ -29,8 +29,11 @@ class TriviaLibrary {
 	private Map<String, LoadedTrivia> loadedTrivia;
 
 	@Inject
-	public TriviaLibrary(File triviaTopicsDir, ObjectMapper objectMapper, TriviaTopicSanityChecker sanityChecker) {
-		this.triviaTopicsDir = Preconditions.checkNotNull(triviaTopicsDir, "triviaTopicsDir must be non-null.");
+	public TriviaLibrary(File triviaDataDir, ObjectMapper objectMapper, TriviaTopicSanityChecker sanityChecker) {
+		Preconditions.checkNotNull(triviaDataDir, "triviaDataDir must be non-null.");
+		this.triviaTopicsDir = new File(triviaDataDir, "topics");
+		this.triviaTopicsDir.mkdirs();
+		
 		this.objectMapper = Preconditions.checkNotNull(objectMapper, "objectMapper must be non-null.");
 		this.sanityChecker = Preconditions.checkNotNull(sanityChecker, "sanityChecker must be non-null.");
 		this.loadedTrivia = new HashMap<>();

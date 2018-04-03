@@ -14,7 +14,7 @@ class RoundEndEvent {
 	 * A map from user ID to their full scorekeeping record.
 	 */
 	@NonNull
-	private final Map<Long, Record> scorekeepingRecords;
+	private final Map<Long, RoundRecord> scorekeepingRecords;
 	
 	@NonNull
 	private final LoadedTrivia loadedTrivia;

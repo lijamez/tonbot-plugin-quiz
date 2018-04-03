@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.UncheckedIOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import net.tonbot.common.BotUtils;
 import net.tonbot.common.TonbotBusinessException;
+import net.tonbot.plugin.trivia.db.TriviaPersistentStore;
+import net.tonbot.plugin.trivia.db.UserTriviaStats;
 import net.tonbot.plugin.trivia.model.Choice;
 import net.tonbot.plugin.trivia.model.TriviaMetadata;
 import net.tonbot.plugin.trivia.multiplechoice.MultipleChoiceQuestion;
@@ -72,16 +75,18 @@ class TriviaListenerImpl implements TriviaListener {
 	private final Color accentColor;
 	private final AudioManager audioManager;
 	private final ConcurrentLinkedQueue<IMessage> deletableMessages = new ConcurrentLinkedQueue<>();
+	private final TriviaPersistentStore store;
 	
 	private LoadedAudioCues audioCues;
 
-	public TriviaListenerImpl(IDiscordClient discordClient, IUser initiator, IChannel channel, BotUtils botUtils, Color accentColor, AudioPlayerManager apm) {
+	public TriviaListenerImpl(IDiscordClient discordClient, IUser initiator, IChannel channel, BotUtils botUtils, Color accentColor, AudioPlayerManager apm, TriviaPersistentStore store) {
 		this.discordClient = Preconditions.checkNotNull(discordClient, "discordClient must be non-null.");
 		this.initiator = Preconditions.checkNotNull(initiator, "initiator must be non-null.");
 		this.channel = Preconditions.checkNotNull(channel, "channel must be non-null.");
 		this.botUtils = Preconditions.checkNotNull(botUtils, "botUtils must be non-null.");
 		this.accentColor = Preconditions.checkNotNull(accentColor, "accentColor must be non-null.");
 		this.audioManager = new AudioManager(channel.getGuild(), apm);
+		this.store = Preconditions.checkNotNull(store, "store must be non-null.");
 	}
 	
 	@Override
@@ -166,7 +171,7 @@ class TriviaListenerImpl implements TriviaListener {
 		LOG.info("Round has ended.");
 		purgeDeletableMessagesAsync();
 		
-		Map<Long, Record> scorekeepingRecords = roundEndEvent.getScorekeepingRecords();
+		Map<Long, RoundRecord> scorekeepingRecords = roundEndEvent.getScorekeepingRecords();
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.withColor(accentColor);
 		eb.withTitle(":triangular_flag_on_post: Round finished!");
@@ -179,18 +184,18 @@ class TriviaListenerImpl implements TriviaListener {
 		if (scorekeepingRecords.isEmpty()) {
 			scoresSb.append("No participants :frowning:");
 		} else {
-			List<Entry<Long, Record>> rankings = scorekeepingRecords.entrySet().stream()
+			List<Entry<Long, RoundRecord>> rankings = scorekeepingRecords.entrySet().stream()
 					.sorted((x, y) -> {
-						Record xRecord = x.getValue();
-						Record yRecord = y.getValue();
+						RoundRecord xRecord = x.getValue();
+						RoundRecord yRecord = y.getValue();
 						
 						return (int) (yRecord.getTotalEarnedScore() - xRecord.getTotalEarnedScore());
 					})
 					.collect(Collectors.toList());
 			
 			for (int rank = 0; rank < rankings.size(); rank++) {
-				Entry<Long, Record> entry = rankings.get(rank);
-				Record record = entry.getValue();
+				Entry<Long, RoundRecord> entry = rankings.get(rank);
+				RoundRecord record = entry.getValue();
 				
 				IUser user = discordClient.fetchUser(entry.getKey());
 				String displayName = user.getDisplayName(channel.getGuild());
@@ -228,6 +233,11 @@ class TriviaListenerImpl implements TriviaListener {
 
 		botUtils.sendEmbed(channel, eb.build(), FINAL_RESULTS_TTL, FINAL_RESULTS_TTL_UNIT);
 		
+		saveToDB(
+				channel.getGuild().getLongID(), 
+				scorekeepingRecords, 
+				roundEndEvent.getLoadedTrivia().getTriviaTopic().getMetadata().getName());
+		
 		File roundCompleteAudioCue = audioCues.getRoundComplete().orElse(null);
 		if (roundCompleteAudioCue != null) {
 			AudioTrack at = audioManager.findTrack(roundCompleteAudioCue);
@@ -241,6 +251,21 @@ class TriviaListenerImpl implements TriviaListener {
 		}
 		
 		audioManager.leaveVC();
+	}
+	
+	private void saveToDB(long guildId, Map<Long, RoundRecord> scorekeepingRecords, String triviaName) {
+		LocalDateTime now = LocalDateTime.now();
+		
+		for (Entry<Long, RoundRecord> entry : scorekeepingRecords.entrySet()) {
+			long userId = entry.getKey();
+			RoundRecord record = entry.getValue();
+			
+			UserTriviaStats uts = new UserTriviaStats(
+					triviaName, 
+					now, 
+					record);
+			store.addUserTriviaStats(guildId, userId, uts);
+		}
 	}
 	
 	@Override

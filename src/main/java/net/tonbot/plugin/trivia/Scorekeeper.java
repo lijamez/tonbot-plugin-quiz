@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableMap;
 class Scorekeeper {
 
 	// A map of scorekeeping records up to but not including the current question.
-	private final Map<Long, Record> overallRecords;
+	private final Map<Long, RoundRecord> overallRecords;
 	
 	// The map of QuestionRecords for the current question that are being updated as users attempt to answer it.
 	// Invariant: Keyset is always a superset of overallRecords' keyset.
@@ -21,6 +21,7 @@ class Scorekeeper {
 	private final double scoreDecayFactor;
 
 	private Long currentQuestionPointValue;
+	private long currentQuestionStartTimeMs;
 	
 	// Contains a history of reference QuestionRecords for question that were already completed.
 	// Because participants can join the trivia at any time, the scorekeeper may need to backfill
@@ -47,6 +48,7 @@ class Scorekeeper {
 		Preconditions.checkNotNull(points >= 0, "points must be non-negative.");
 
 		this.currentQuestionPointValue = points;
+		this.currentQuestionStartTimeMs = System.currentTimeMillis();
 		this.currentQuestionRecords.clear();
 		
 		this.currentReferenceQuestionRecord = new QuestionRecord(points, scoreDecayFactor);
@@ -88,6 +90,7 @@ class Scorekeeper {
 				.computeIfAbsent(userId, i -> currentReferenceQuestionRecord.clone());
 
 		questionRecord.setAnsweredCorrectly(true);
+		questionRecord.setTimeToAnswerMs(System.currentTimeMillis() - currentQuestionStartTimeMs);
 		
 		return questionRecord.getEarnedPoints();
 	}
@@ -98,10 +101,10 @@ class Scorekeeper {
 		for (Entry<Long, QuestionRecord> currentQuestionRecordEntry : currentQuestionRecords.entrySet()) {
 			long uid = currentQuestionRecordEntry.getKey();
 			
-			Record record = overallRecords.get(uid);
+			RoundRecord record = overallRecords.get(uid);
 			if (record == null) {
 				// New user. Must backfill all question records.
-				record = new Record();
+				record = new RoundRecord();
 				record.getQuestionRecords().addAll(questionRecordHistory);
 				
 				overallRecords.put(uid, record);
@@ -150,7 +153,7 @@ class Scorekeeper {
 	 * 
 	 * @return An immutable map a map of user IDs to all activity logged for that user.
 	 */
-	public Map<Long, Record> getRecords() {
+	public Map<Long, RoundRecord> getRecords() {
 		return ImmutableMap.copyOf(overallRecords);
 	}
 }

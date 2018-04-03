@@ -33,6 +33,14 @@ dependencies {
 	
 	implementation group: 'com.sedmelluq', name: 'lavaplayer', version: '1.2.51'
 	
+	implementation group: 'org.mapdb', name: 'mapdb', version: '3.0.5'
+	
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.5'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.5'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.5'
+	implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.9.5'
+	implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.9.5'
+	
 	compileOnly 'org.projectlombok:lombok:1.16.20'
 	
 	testImplementation group: 'junit', name: 'junit', version: '4.12'
